@@ -1,12 +1,20 @@
-/** 사이드 메뉴 — Figma Group 1 구조 기준 (라우트가 있는 항목만 링크) */
-export const dashboardNav = [
+/**
+ * 앱 기본 레이아웃에서 사용하는 고정 설정 모음입니다.
+ *
+ * - sidebarNav: 왼쪽 사이드바 메뉴 목록입니다.
+ * - link 타입의 label은 AppShellHeader의 페이지 제목으로도 사용합니다.
+ * - appFooterText: 앱 하단 footer에 표시할 문구입니다.
+ */
+
+export const sidebarNav = [
   { type: 'link', label: '대시보드', to: '/app/dashboard' },
-  { type: 'heading', label: '소싱기' },
+  { type: 'heading', label: '소싱' },
   { type: 'sub', label: '상품소싱' },
   { type: 'link', label: '카테고리 소싱', to: '/app/sourcing/category' },
+  { type: 'link', label: '소싱 사이트 연동 관리', to: '/app/sourcing/sites' },
   { type: 'heading', label: '상품 관리' },
   { type: 'link', label: '수집/등록 상품 관리', to: '/app/products/collected' },
-  { type: 'muted', label: '유입수 분석' },
+  { type: 'muted', label: '판매가 분석' },
   { type: 'heading', label: '주문 관리' },
   { type: 'link', label: '전체 주문', to: '/app/orders/all' },
   { type: 'link', label: '자동 주문 현황', to: '/app/orders/auto' },
@@ -14,12 +22,12 @@ export const dashboardNav = [
   { type: 'heading', label: '결제 관리' },
   { type: 'link', label: '결제수단 관리', to: '/app/payment/methods' },
   { type: 'muted', label: '자동결제 설정' },
-  { type: 'link', label: '실패 내역', to: '/app/payment/failures' },
+  { type: 'link', label: '결제 실패 내역', to: '/app/payment/failures' },
   { type: 'heading', label: '수익 관리' },
   { type: 'link', label: '월별 수익', to: '/app/revenue/monthly' },
   { type: 'link', label: '예상/실제 마진', to: '/app/revenue/margin' },
   { type: 'heading', label: '설정' },
-  { type: 'link', label: '업로드/마켓', to: '/app/settings/upload-markets' },
+  { type: 'link', label: '상품 업로드/마켓 설정', to: '/app/settings/upload-markets' },
   { type: 'muted', label: 'AI API 키 관리' },
   { type: 'link', label: '제외/금지어 관리', to: '/app/settings/excluded-keywords' },
 ]

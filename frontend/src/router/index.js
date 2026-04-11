@@ -1,6 +1,7 @@
 import { createRouter, createWebHistory } from 'vue-router'
 import StartView from '../views/StartView.vue'
 
+// 주소와 화면을 연결 시킨다.
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
@@ -16,7 +17,7 @@ const router = createRouter({
     },
     {
       path: '/app',
-      component: () => import('../layouts/DashboardLayout.vue'),
+      component: () => import('../layouts/Layout.vue'),
       children: [
         { path: '', redirect: '/app/sourcing/category' },
         {
