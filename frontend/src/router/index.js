@@ -100,4 +100,27 @@ const router = createRouter({
   ],
 })
 
+// 내비게이션 가드(Navigation Guard)
+// - 라우팅이 일어날 때 프로르래밍 방식으로 내비게이션을 안전하게 보호하는 기능을 수행한다.
+// - 라우팅 경로 변경, 새로 고침 시에 리프레시 토큰으로 액세스 토큰을 재발급 받는다.
+// - beforeEach에 전달하는 인자 중 to는 이동하려는 경로를 나타내고 from은 이동 전 현재 경로 정보이다.
+// router.beforeEach((to, from) =>{
+//   // console.log(to);
+//   // console.log(from);
+//   // const authStore = useAuthStore();
+//   try {
+//     if (authStore.tokenInfo.accessToken === ''){
+//       // await authStore.refreshAccessToken();
+//     }
+    
+//     if(to.name === 'login' && authStore.tokenInfo.accessToken){
+//       return {name: 'home'};
+//     }
+//   } catch (error){
+//     if (to.name !== 'login'){
+//       return {name : login};
+//     }
+//   }
+// });
+
 export default router

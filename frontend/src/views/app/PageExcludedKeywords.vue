@@ -1,17 +1,22 @@
 <script setup>
-import { computed, nextTick, ref } from 'vue'
+import { ref } from 'vue'
 import BaseButton from '../../components/common/BaseButton.vue'
 import BaseCheckTable from '../../components/common/BaseCheckTable.vue'
 import BaseSectionTitle from '../../components/common/BaseSectionTitle.vue'
 
 const forbiddenSelectedKeys = ref([])
 const replacementSelectedKeys = ref([])
-const forbiddenTableRef = ref(null)
-const replacementTableRef = ref(null)
 
-// 처음 진입 시에는 등록된 항목 없이 빈 상태 문구만 노출한다.
-const forbiddenRows = ref([])
-const replacementRows = ref([])
+const forbiddenRows = ref([{ id: 'forbidden-1', no: 1, word: '정품보장', editing: false }])
+const replacementRows = ref([
+  {
+    id: 'replacement-1',
+    no: 1,
+    sourceWord: '무료배송',
+    replacementWord: '배송비 포함',
+    editing: false,
+  },
+])
 
 const forbiddenColumns = [
   {
@@ -46,36 +51,16 @@ function renumberRows(rows) {
   })
 }
 
-// 저장되지 않은 편집 행이 있으면 새 행을 추가하지 못하게 막는다.
-const hasUnsavedForbiddenRow = computed(() => forbiddenRows.value.some((row) => row.editing))
-const hasUnsavedReplacementRow = computed(() => replacementRows.value.some((row) => row.editing))
-
-// 빈 값 저장을 막고, 저장 시에는 앞뒤 공백을 제거한다.
-function canSaveForbiddenRow(row) {
-  return row.word.trim().length > 0
-}
-
-function canSaveReplacementRow(row) {
-  return row.sourceWord.trim().length > 0 && row.replacementWord.trim().length > 0
-}
-
-async function addForbiddenRow() {
-  if (hasUnsavedForbiddenRow.value) return
-
+function addForbiddenRow() {
   forbiddenRows.value.push({
     id: nextId('forbidden'),
     no: forbiddenRows.value.length + 1,
     word: '',
     editing: true,
   })
-
-  await nextTick()
-  forbiddenTableRef.value?.scrollToBottom()
 }
 
-async function addReplacementRow() {
-  if (hasUnsavedReplacementRow.value) return
-
+function addReplacementRow() {
   replacementRows.value.push({
     id: nextId('replacement'),
     no: replacementRows.value.length + 1,
@@ -83,9 +68,6 @@ async function addReplacementRow() {
     replacementWord: '',
     editing: true,
   })
-
-  await nextTick()
-  replacementTableRef.value?.scrollToBottom()
 }
 
 function deleteForbiddenRows() {
@@ -109,34 +91,17 @@ function deleteReplacementRows() {
 }
 
 function toggleForbiddenEdit(row) {
-  if (!row.editing) {
-    row.editing = true
-    return
-  }
-
-  if (!canSaveForbiddenRow(row)) return
-
-  row.word = row.word.trim()
-  row.editing = false
+  row.editing = !row.editing
 }
 
 function toggleReplacementEdit(row) {
-  if (!row.editing) {
-    row.editing = true
-    return
-  }
-
-  if (!canSaveReplacementRow(row)) return
-
-  row.sourceWord = row.sourceWord.trim()
-  row.replacementWord = row.replacementWord.trim()
-  row.editing = false
+  row.editing = !row.editing
 }
 </script>
 
 <template>
   <div class="space-y-12">
-    <section class="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
+    <section>
       <BaseSectionTitle>금지단어</BaseSectionTitle>
       <div class="mt-2 flex">
         <span class="mr-2 text-amber-600">ⓘ</span>
@@ -146,7 +111,6 @@ function toggleReplacementEdit(row) {
       </div>
       
       <BaseCheckTable
-        ref="forbiddenTableRef"
         v-model:selected-keys="forbiddenSelectedKeys"
         class="mt-4"
         :columns="forbiddenColumns"
@@ -163,27 +127,19 @@ function toggleReplacementEdit(row) {
             v-model="row.word"
             type="text"
             placeholder="금지단어 입력"
-            class="w-full rounded border border-transparent bg-transparent px-2 py-0.5 text-sm outline-none focus:border-neutral-300 focus:bg-white"
-            @keydown.enter.prevent="toggleForbiddenEdit(row)"
+            class="w-full rounded border border-transparent bg-transparent px-2 py-1 text-sm outline-none focus:border-neutral-300 focus:bg-white"
           />
           <span v-else>{{ row.word }}</span>
         </template>
         <template #cell-management="{ row }">
-          <BaseButton
-            variant="secondary"
-            size="sm"
-            :disabled="row.editing && !canSaveForbiddenRow(row)"
-            @click="toggleForbiddenEdit(row)"
-          >
+          <BaseButton variant="secondary" size="sm" @click="toggleForbiddenEdit(row)">
             {{ row.editing ? '저장' : '수정' }}
           </BaseButton>
         </template>
       </BaseCheckTable>
 
       <div class="mt-4 flex justify-end gap-2">
-        <BaseButton size="sm" :disabled="hasUnsavedForbiddenRow" @click="addForbiddenRow">
-          + 추가하기
-        </BaseButton>
+        <BaseButton size="sm" @click="addForbiddenRow">+ 추가하기</BaseButton>
         <BaseButton
           variant="secondary"
           size="sm"
@@ -195,17 +151,16 @@ function toggleReplacementEdit(row) {
       </div>
     </section>
 
-    <section class="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm ">
+    <section>
       <BaseSectionTitle>치환단어</BaseSectionTitle>
       <div class="mt-2 flex">
         <span class="mr-2 text-amber-600">ⓘ</span>
         <p class="text-sm text-neutral-700">
-          특정 단어를 다른 표현으로 자동 변경합니다.
+          특정 단어를 다른 표현으로 자동 변경됩니다. (예 : 무료배송 → 배송비 포함)
         </p>
       </div>
 
       <BaseCheckTable
-        ref="replacementTableRef"
         v-model:selected-keys="replacementSelectedKeys"
         class="mt-4"
         :columns="replacementColumns"
@@ -222,8 +177,7 @@ function toggleReplacementEdit(row) {
             v-model="row.sourceWord"
             type="text"
             placeholder="원본 단어 입력"
-            class="w-full rounded border border-transparent bg-transparent px-2 py-0.5 text-sm outline-none focus:border-neutral-300 focus:bg-white"
-            @keydown.enter.prevent="toggleReplacementEdit(row)"
+            class="w-full rounded border border-transparent bg-transparent px-2 py-1 text-sm outline-none focus:border-neutral-300 focus:bg-white"
           />
           <span v-else>{{ row.sourceWord }}</span>
         </template>
@@ -233,27 +187,19 @@ function toggleReplacementEdit(row) {
             v-model="row.replacementWord"
             type="text"
             placeholder="치환 단어 입력"
-            class="w-full rounded border border-transparent bg-transparent px-2 py-0.5 text-sm outline-none focus:border-neutral-300 focus:bg-white"
-            @keydown.enter.prevent="toggleReplacementEdit(row)"
+            class="w-full rounded border border-transparent bg-transparent px-2 py-1 text-sm outline-none focus:border-neutral-300 focus:bg-white"
           />
           <span v-else>{{ row.replacementWord }}</span>
         </template>
         <template #cell-management="{ row }">
-          <BaseButton
-            variant="secondary"
-            size="sm"
-            :disabled="row.editing && !canSaveReplacementRow(row)"
-            @click="toggleReplacementEdit(row)"
-          >
+          <BaseButton variant="secondary" size="sm" @click="toggleReplacementEdit(row)">
             {{ row.editing ? '저장' : '수정' }}
           </BaseButton>
         </template>
       </BaseCheckTable>
 
       <div class="mt-4 flex justify-end gap-2">
-        <BaseButton size="sm" :disabled="hasUnsavedReplacementRow" @click="addReplacementRow">
-          + 추가하기
-        </BaseButton>
+        <BaseButton size="sm" @click="addReplacementRow">+ 추가하기</BaseButton>
         <BaseButton
           variant="secondary"
           size="sm"

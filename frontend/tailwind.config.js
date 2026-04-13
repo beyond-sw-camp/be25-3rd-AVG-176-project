@@ -5,7 +5,7 @@ export default {
     extend: {
       colors: {
         point: '#ff5c04',
-        sub: '#ff7a33',
+        sub: '#ff7a33 ',
       },
       fontFamily: {
         sans: ['Inter', 'Noto Sans KR', 'system-ui', 'sans-serif'],
@@ -14,4 +14,3 @@ export default {
   },
   plugins: [],
 }
-

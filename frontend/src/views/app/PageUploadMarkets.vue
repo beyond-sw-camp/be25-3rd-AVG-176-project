@@ -1,30 +1,161 @@
 <script setup>
-import { computed, ref } from 'vue'
+import { computed, onMounted, reactive, ref, watch } from 'vue'
 import BaseButton from '../../components/common/BaseButton.vue'
 import BaseSectionTitle from '../../components/common/BaseSectionTitle.vue'
 import BaseSelect from '../../components/common/BaseSelect.vue'
+import { getUploadMarketSettings, updateUploadMarketSettings } from '../../api/uploadMarketPolicy'
 
-const amazonPriceAdjust = ref(true)
-const competeAdjust = ref(true)
-const autoPublish = ref(true)
-const shippingType = ref('PAID')
-const isFreeShipping = computed(() => shippingType.value === 'FREE')
+const marketOptions = [
+  { label: '쿠팡', value: 'COUPANG' },
+  { label: '네이버 스마트 스토어', value: 'NAVER_SMART_STORE' },
+  { label: '11번가', value: 'ELEVEN_STREET' },
+  { label: '지마켓', value: 'GMARKET' },
+  { label: '옥션', value: 'AUCTION' },
+]
+
+const roundingUnitOptions = [10000, 1000, 100, 50, 10]
+
+const roundingUnitByAmount = {
+  10000: 'TEN_THOUSAND_WON',
+  1000: 'THOUSAND_WON',
+  100: 'HUNDRED_WON',
+  50: 'FIFTY_WON',
+  10: 'TEN_WON',
+}
+
+const roundingAmountByUnit = Object.fromEntries(
+  Object.entries(roundingUnitByAmount).map(([amount, unit]) => [unit, Number(amount)]),
+)
+
+const form = reactive({
+  market: 'COUPANG',
+  targetMarginRate: 30,
+  minimumMargin: 8000,
+  marketFeeRate: 10,
+  cardFeeRate: 3.3,
+  exchangeRate: 1350,
+  roundingUnit: 100,
+  amazonPriceAdjust: true,
+  competeAdjust: true,
+  minimumMarginProtection: true,
+  exchangeRateAutoUpdate: true,
+  stopSellingOnLoss: true,
+  shippingType: 'PAID',
+  defaultShippingFee: 5000,
+  remoteAreaFee: 8000,
+  returnShippingFee: 10000,
+  autoPublish: true,
+})
+
+const loading = ref(false)
+const saving = ref(false)
+const errorMessage = ref('')
+const savedMessage = ref('')
+const infoMessage = ref('')
+
+const isFreeShipping = computed(() => form.shippingType === 'FREE')
+
+function applySettings(settings) {
+  if (!settings || typeof settings !== 'object') return
+  Object.assign(form, {
+    market: settings.marketCode ?? form.market,
+    targetMarginRate: Number(settings.targetMarginRate ?? form.targetMarginRate),
+    minimumMargin: Number(settings.minMarginAmount ?? form.minimumMargin),
+    marketFeeRate: Number(settings.marketFeeRate ?? form.marketFeeRate),
+    cardFeeRate: Number(settings.cardFeeRate ?? form.cardFeeRate),
+    exchangeRate: Number(settings.exchangeRate ?? form.exchangeRate),
+    roundingUnit: roundingAmountByUnit[settings.roundingUnit] ?? form.roundingUnit,
+    amazonPriceAdjust: settings.amazonAutoPricingEnabled ?? form.amazonPriceAdjust,
+    competeAdjust: settings.competitorAutoPricingEnabled ?? form.competeAdjust,
+    minimumMarginProtection: settings.minMarginProtectEnabled ?? form.minimumMarginProtection,
+    exchangeRateAutoUpdate: settings.priceAutoUpdateEnabled ?? form.exchangeRateAutoUpdate,
+    stopSellingOnLoss: settings.stopLossEnabled ?? form.stopSellingOnLoss,
+    shippingType: settings.shippingFeeType === 'FREE_SHIPPING' ? 'FREE' : 'PAID',
+    defaultShippingFee: Number(settings.baseShippingFee ?? form.defaultShippingFee),
+    remoteAreaFee: Number(settings.remoteAreaExtraShippingFee ?? form.remoteAreaFee),
+    returnShippingFee: Number(settings.returnShippingFee ?? form.returnShippingFee),
+    autoPublish: settings.autoPublishEnabled ?? form.autoPublish,
+  })
+}
+
+function toPolicySettingRequest() {
+  return {
+    targetMarginRate: form.targetMarginRate,
+    minMarginAmount: form.minimumMargin,
+    marketFeeRate: form.marketFeeRate,
+    cardFeeRate: form.cardFeeRate,
+    exchangeRate: form.exchangeRate,
+    roundingUnit: roundingUnitByAmount[form.roundingUnit],
+    amazonAutoPricingEnabled: form.amazonPriceAdjust,
+    competitorAutoPricingEnabled: form.competeAdjust,
+    minMarginProtectEnabled: form.minimumMarginProtection,
+    priceAutoUpdateEnabled: form.exchangeRateAutoUpdate,
+    stopLossEnabled: form.stopSellingOnLoss,
+    autoPublishEnabled: form.autoPublish,
+    shippingFeeType: form.shippingType === 'FREE' ? 'FREE_SHIPPING' : 'PAID_SHIPPING',
+    baseShippingFee: isFreeShipping.value ? 0 : form.defaultShippingFee,
+    remoteAreaExtraShippingFee: form.remoteAreaFee,
+    returnShippingFee: form.returnShippingFee,
+  }
+}
+
+async function loadSettings() {
+  loading.value = true
+  errorMessage.value = ''
+  infoMessage.value = ''
+
+  try {
+    applySettings(await getUploadMarketSettings(form.market))
+  } catch (error) {
+    if (error?.status === 404) {
+      infoMessage.value = '아직 저장된 설정이 없습니다. 기본값을 확인한 뒤 저장해 주세요.'
+      return
+    }
+
+    errorMessage.value = error instanceof Error ? error.message : '설정 정보를 불러오지 못했습니다.'
+  } finally {
+    loading.value = false
+  }
+}
+
+async function saveSettings() {
+  saving.value = true
+  errorMessage.value = ''
+  savedMessage.value = ''
+  infoMessage.value = ''
+
+  try {
+    applySettings(await updateUploadMarketSettings(form.market, toPolicySettingRequest()))
+    savedMessage.value = '설정 정보를 저장했습니다.'
+  } catch (error) {
+    errorMessage.value = error instanceof Error ? error.message : '설정 정보를 저장하지 못했습니다.'
+  } finally {
+    saving.value = false
+  }
+}
+
+onMounted(loadSettings)
+
+watch(
+  () => form.market,
+  () => {
+    savedMessage.value = ''
+    loadSettings()
+  },
+)
 </script>
 
 <template>
-  <div>
+  <form @submit.prevent="saveSettings">
     <div class="grid gap-6 xl:grid-cols-2">
       <section class="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
-        <div
-          class="flex items-center gap-3 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
-        >
-          <label for="market-select" class="shrink-0">국내 마켓</label>
-          <BaseSelect id="market-select" class="w-full">
-            <option>쿠팡</option>
-            <option>스마트스토어</option>
-            <option>11번가</option>
-            <option>옥션</option>
-            <option>아마존</option>
+        <BaseSectionTitle class="mb-4">상품 업로드 마켓</BaseSectionTitle>
+        <div class="flex items-center gap-3">
+          <label for="market-select" class="shrink-0 text-sm text-neutral-600">국내 마켓</label>
+          <BaseSelect id="market-select" v-model="form.market" class="w-full" :disabled="loading">
+            <option v-for="market in marketOptions" :key="market.value" :value="market.value">
+              {{ market.label }}
+            </option>
           </BaseSelect>
         </div>
 
@@ -44,54 +175,62 @@ const isFreeShipping = computed(() => shippingType.value === 'FREE')
           <label class="block text-sm">
             <span class="text-neutral-600">목표 마진율 (%)</span>
             <input
+              v-model.number="form.targetMarginRate"
               type="number"
-              value="30"
+              :disabled="loading"
               class="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
             />
           </label>
           <label class="block text-sm">
             <span class="text-neutral-600">최소 마진 (원)</span>
             <input
+              v-model.number="form.minimumMargin"
               type="number"
-              value="8000"
               step="100"
+              :disabled="loading"
               class="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
             />
           </label>
           <label class="block text-sm">
             <span class="text-neutral-600">마켓 수수료 (%)</span>
             <input
+              v-model.number="form.marketFeeRate"
               type="number"
-              value="10"
+              :disabled="loading"
               class="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
             />
           </label>
           <label class="block text-sm">
             <span class="text-neutral-600">카드 수수료 (%)</span>
             <input
+              v-model.number="form.cardFeeRate"
               type="number"
-              value="3.3"
               step="0.1"
+              :disabled="loading"
               class="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
             />
           </label>
           <label class="block text-sm">
             <span class="text-neutral-600">환율</span>
             <input
+              v-model.number="form.exchangeRate"
               type="number"
-              value="1350"
               step="50"
+              :disabled="loading"
               class="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
             />
           </label>
           <label for="roundingUnit" class="block text-sm text-neutral-600">
             단위 올림
-            <BaseSelect id="roundingUnit" class="mt-1 w-full">
-              <option>10000원</option>
-              <option>1000원</option>
-              <option>100원</option>
-              <option>50원</option>
-              <option>10원</option>
+            <BaseSelect
+              id="roundingUnit"
+              v-model="form.roundingUnit"
+              class="mt-1 w-full"
+              :disabled="loading"
+            >
+              <option v-for="unit in roundingUnitOptions" :key="unit" :value="unit">
+                {{ unit }}원
+              </option>
             </BaseSelect>
           </label>
         </div>
@@ -110,8 +249,9 @@ const isFreeShipping = computed(() => shippingType.value === 'FREE')
         <div class="space-y-4 border-t border-neutral-100 pt-6">
           <label class="flex items-start gap-3 text-sm">
             <input
-              v-model="amazonPriceAdjust"
+              v-model="form.amazonPriceAdjust"
               type="checkbox"
+              :disabled="loading"
               class="mt-1 rounded border-neutral-300 text-point"
             />
             <span>
@@ -123,8 +263,9 @@ const isFreeShipping = computed(() => shippingType.value === 'FREE')
           </label>
           <label class="flex items-start gap-3 text-sm">
             <input
-              v-model="competeAdjust"
+              v-model="form.competeAdjust"
               type="checkbox"
+              :disabled="loading"
               class="mt-1 rounded border-neutral-300 text-point"
             />
             <span>
@@ -141,7 +282,12 @@ const isFreeShipping = computed(() => shippingType.value === 'FREE')
         <div class="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
           <BaseSectionTitle>자동 보호 설정</BaseSectionTitle>
           <label class="mt-4 flex items-start gap-3 text-sm">
-            <input type="checkbox" checked class="mt-1 rounded border-neutral-300 text-point" />
+            <input
+              v-model="form.minimumMarginProtection"
+              type="checkbox"
+              :disabled="loading"
+              class="mt-1 rounded border-neutral-300 text-point"
+            />
             <span>
               <span class="font-medium">최소 마진 보호</span>
               <span class="mt-1 block text-neutral-600">
@@ -150,7 +296,12 @@ const isFreeShipping = computed(() => shippingType.value === 'FREE')
             </span>
           </label>
           <label class="mt-4 flex items-start gap-3 text-sm">
-            <input type="checkbox" checked class="mt-1 rounded border-neutral-300 text-point" />
+            <input
+              v-model="form.exchangeRateAutoUpdate"
+              type="checkbox"
+              :disabled="loading"
+              class="mt-1 rounded border-neutral-300 text-point"
+            />
             <span>
               <span class="font-medium">환율 변동 시 가격 자동 업데이트</span>
               <span class="mt-1 block text-neutral-600"
@@ -159,7 +310,12 @@ const isFreeShipping = computed(() => shippingType.value === 'FREE')
             </span>
           </label>
           <label class="mt-4 flex items-start gap-3 text-sm">
-            <input type="checkbox" checked class="mt-1 rounded border-neutral-300 text-point" />
+            <input
+              v-model="form.stopSellingOnLoss"
+              type="checkbox"
+              :disabled="loading"
+              class="mt-1 rounded border-neutral-300 text-point"
+            />
             <span>
               <span class="font-medium">손실 발생 시 판매 중지</span>
               <span class="mt-1 block text-neutral-600">
@@ -174,7 +330,7 @@ const isFreeShipping = computed(() => shippingType.value === 'FREE')
           <div class="mt-4 grid gap-4 sm:grid-cols-2">
             <label class="text-sm">
               <span class="text-neutral-600">배송비 종류</span>
-              <BaseSelect v-model="shippingType" class="mt-1 w-full">
+              <BaseSelect v-model="form.shippingType" class="mt-1 w-full" :disabled="loading">
                 <option value="PAID">유료 배송</option>
                 <option value="FREE">무료 배송</option>
               </BaseSelect>
@@ -182,28 +338,30 @@ const isFreeShipping = computed(() => shippingType.value === 'FREE')
             <label class="text-sm">
               <span class="text-neutral-600">기본 배송비</span>
               <input
+                v-model.number="form.defaultShippingFee"
                 type="number"
-                value="5000"
                 step="1000"
                 class="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm disabled:bg-neutral-100 disabled:text-neutral-400"
-                :disabled="isFreeShipping"
+                :disabled="loading || isFreeShipping"
               />
             </label>
             <label class="text-sm">
               <span class="text-neutral-600">제주 도서산간 추가비용</span>
               <input
+                v-model.number="form.remoteAreaFee"
                 type="number"
-                value="8000"
                 step="1000"
+                :disabled="loading"
                 class="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
               />
             </label>
             <label class="text-sm">
               <span class="text-neutral-600">반품비 (편도)</span>
               <input
+                v-model.number="form.returnShippingFee"
                 type="number"
-                value="10000"
                 step="1000"
+                :disabled="loading"
                 class="mt-1 w-full rounded-md border border-neutral-300 px-3 py-2 text-sm"
               />
             </label>
@@ -227,22 +385,43 @@ const isFreeShipping = computed(() => shippingType.value === 'FREE')
           <BaseSectionTitle>상품 소싱 등록 설정</BaseSectionTitle>
           <label class="mt-3 flex items-start gap-3 text-sm">
             <input
-              v-model="autoPublish"
+              v-model="form.autoPublish"
               type="checkbox"
+              :disabled="loading"
               class="mt-1 rounded border-neutral-300 text-point"
             />
             <span>
               <span class="font-medium text-neutral-900">국내 마켓 자동 등록</span>
               <span class="mt-1 block text-neutral-600"
-                >소싱 상품을 가공 한 이후 등록 대기 상태를 거치지 않고 마켓켓에 자동으로
+                >소싱 상품을 가공 한 이후 등록 대기 상태를 거치지 않고 마켓에 자동으로
                 등록하니다.</span
               >
             </span>
           </label>
         </div>
 
-        <BaseButton size="lg" block> 설정 정보 저장하기 </BaseButton>
+        <p
+          v-if="errorMessage"
+          class="rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
+        >
+          {{ errorMessage }}
+        </p>
+        <p
+          v-if="infoMessage"
+          class="rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+        >
+          {{ infoMessage }}
+        </p>
+        <p
+          v-if="savedMessage"
+          class="rounded border border-emerald-200 bg-emerald-50 px-3 py-2 text-sm text-emerald-700"
+        >
+          {{ savedMessage }}
+        </p>
+        <BaseButton type="submit" size="lg" block :disabled="loading || saving">
+          {{ saving ? '저장 중...' : '설정 정보 저장하기' }}
+        </BaseButton>
       </section>
     </div>
-  </div>
+  </form>
 </template>
