@@ -34,8 +34,9 @@ const handleSignup = async () => {
     return
   }
 
-  if (password.value.length < 8) {
-    errorMessage.value = '비밀번호는 8자 이상이어야 합니다.'
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/
+  if (!passwordRegex.test(password.value)) {
+    errorMessage.value = '비밀번호는 영문/숫자/특수문자 조합 8자 이상이어야 합니다.'
     return
   }
 
@@ -152,10 +153,10 @@ const checkUsernameDuplicate = async () => {
 </script>
 
 <template>
-  <div class="flex h-screen w-screen overflow-hidden bg-white">
-    <div class="grid h-full w-full grid-cols-1 md:grid-cols-[9fr_11fr]">
+  <div class="flex min-h-screen w-screen bg-white">
+    <div class="grid min-h-screen w-full grid-cols-1 md:grid-cols-[9fr_11fr]">
       <!-- 왼쪽: 주황색 배너 -->
-      <section class="relative flex flex-col justify-between overflow-hidden bg-[#ff7b39] px-12 py-8 md:px-20 md:py-10">
+      <section class="relative flex flex-col justify-between min-h-[100vh] overflow-hidden bg-[#ff7b39] px-12 py-8 md:px-20 md:py-10">
         <!-- 장식 요소들 -->
         <div class="pointer-events-none absolute right-20 top-10 z-[1] h-32 w-48 rotate-[-25deg] rounded-2xl border-4 border-white/20"></div>
         <div class="pointer-events-none absolute bottom-32 right-[-20px] z-[1] h-48 w-48 rotate-[20deg] rounded-2xl border-4 border-white/20"></div>
@@ -236,7 +237,7 @@ const checkUsernameDuplicate = async () => {
       </section>
 
       <!-- 오른쪽: 회원가입 폼 -->
-      <section class="flex flex-col justify-center overflow-y-auto bg-white px-6 py-8 md:px-12 lg:px-20">
+      <section class="flex flex-col min-h-[100vh] overflow-y-auto bg-white px-6 py-8 md:px-12 lg:px-20">
         <div class="w-full max-w-[600px] mx-auto">
           <h2 class="mb-4 text-[28px] font-bold text-[#111827] md:text-[32px]">
             회원정보 등록

@@ -9,22 +9,26 @@ const username = ref('')
 const password = ref('')
 const rememberId = ref(false)
 
-const errorMessage = ref('')
+const usernameError = ref('')
+const passwordError = ref('')
+const generalError = ref('')
 const successMessage = ref('')
 
 const oauthBaseUrl = (api.defaults.baseURL || '').replace(/\/$/, '')
 
 const handleLogin = async () => {
-  errorMessage.value = ''
+  usernameError.value = ''
+  passwordError.value = ''
+  generalError.value = ''
   successMessage.value = ''
 
   if (!username.value.trim()) {
-    errorMessage.value = '아이디를 입력하세요.'
+    usernameError.value = '아이디를 입력하세요.'
     return
   }
 
   if (!password.value.trim()) {
-    errorMessage.value = '비밀번호를 입력하세요.'
+    passwordError.value = '비밀번호를 입력하세요.'
     return
   }
 
@@ -49,12 +53,12 @@ const handleLogin = async () => {
 
     if (err.response) {
       if (err.response.status === 401) {
-        errorMessage.value = '아이디나 비밀번호가 틀렸습니다.'
+        generalError.value = '아이디나 비밀번호가 틀렸습니다.'
       } else {
-        errorMessage.value = `로그인 실패 / status: ${err.response.status}`
+        generalError.value = `로그인 실패 / status: ${err.response.status}`
       }
     } else {
-      errorMessage.value = '서버 연결 실패'
+      generalError.value = '서버 연결 실패'
     }
   }
 }
@@ -182,7 +186,7 @@ const handleNaverLogin = () => {
           <div class="mb-6 h-[1.5px] w-full bg-[#d1d5db]"></div>
 
           <!-- 아이디 -->
-          <div class="mb-6 flex items-center gap-3">
+          <div class="mb-2 flex items-center gap-3">
             <label class="w-[120px] flex-shrink-0 text-[17px] font-bold text-[#111827]">아이디</label>
             <input
               id="username"
@@ -192,9 +196,13 @@ const handleNaverLogin = () => {
               placeholder="아이디를 입력하세요"
             />
           </div>
+          <!-- 아이디 에러 메시지 -->
+          <p v-if="usernameError" class="mb-4 ml-[132px] text-[13px] font-medium text-[#dc2626]">
+            {{ usernameError }}
+          </p>
 
           <!-- 비밀번호 -->
-          <div class="mb-6 flex items-center gap-3">
+          <div class="mb-2 flex items-center gap-3">
             <label class="w-[120px] flex-shrink-0 text-[17px] font-bold text-[#111827]">비밀번호</label>
             <input
               id="password"
@@ -205,6 +213,10 @@ const handleNaverLogin = () => {
               @keyup.enter="handleLogin"
             />
           </div>
+          <!-- 비밀번호 에러 메시지 -->
+          <p v-if="passwordError" class="mb-4 ml-[132px] text-[13px] font-medium text-[#dc2626]">
+            {{ passwordError }}
+          </p>
 
           <!-- 아이디 저장 체크박스 -->
           <div class="mb-6 flex items-center gap-2 pl-[132px]">
@@ -274,9 +286,9 @@ const handleNaverLogin = () => {
             </button>
           </div>
 
-          <!-- 메시지 -->
-          <p v-if="errorMessage" class="mt-6 rounded-lg border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-[13px] font-medium text-[#dc2626]">
-            {{ errorMessage }}
+          <!-- 일반 에러 메시지 (서버 오류 등) -->
+          <p v-if="generalError" class="mt-6 rounded-lg border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-[13px] font-medium text-[#dc2626]">
+            {{ generalError }}
           </p>
 
           <p v-if="successMessage" class="mt-6 rounded-lg border border-[#86efac] bg-[#f0fdf4] px-4 py-3 text-[13px] font-medium text-[#16a34a]">

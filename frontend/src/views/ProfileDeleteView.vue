@@ -23,16 +23,16 @@ const handleDelete = async () => {
   successMessage.value = ''
 
   if (!password.value.trim()) {
-    errorMessage.value = '현재 비밀번호를 입력해줘.'
+    errorMessage.value = '현재 비밀번호를 입력해주세요.'
     return
   }
 
   if (confirmText.value !== '탈퇴합니다') {
-    errorMessage.value = '확인 문구를 정확히 입력해줘.'
+    errorMessage.value = '확인 문구를 정확히 입력해주세요.'
     return
   }
 
-  if (!confirm('정말 탈퇴할 거야? 이 작업은 되돌릴 수 없어.')) {
+  if (!confirm('정말 탈퇴하시겠습니까? 이 작업은 되돌릴 수 없습니다.')) {
     return
   }
 
@@ -49,14 +49,14 @@ const handleDelete = async () => {
     const finalUrl = response?.request?.responseURL || ''
 
     if (finalUrl.includes('/users/login')) {
-      successMessage.value = '회원 탈퇴가 완료됐어.'
+      successMessage.value = '회원 탈퇴가 완료되었습니다.'
       setTimeout(() => {
         router.push('/login')
       }, 800)
       return
     }
 
-    successMessage.value = '회원 탈퇴 요청이 처리됐어.'
+    successMessage.value = '회원 탈퇴 요청이 처리되었습니다.'
     setTimeout(() => {
       router.push('/login')
     }, 800)
@@ -166,7 +166,7 @@ const handleDelete = async () => {
           <p class="mb-4 text-[16px] text-[#6b7280]">탈퇴하면 계정과 관련된 모든 데이터가 삭제되고, 되돌릴 수 없습니다.</p>
 
           <div class="mb-6 rounded-lg border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-[14px] font-medium text-[#dc2626]">
-            <strong>주의:</strong> 탈퇴 후에는 모든 데이터가 영구 삭제되며 복구할 수 없습니다.
+            <strong>주의 :</strong> 탈퇴 후에는 모든 데이터가 영구 삭제되며 복구할 수 없습니다.
           </div>
 
           <!-- 현재 비밀번호 -->

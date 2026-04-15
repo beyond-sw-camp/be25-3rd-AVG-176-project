@@ -38,19 +38,19 @@ const handleResetPassword = async () => {
   }
 
   try {
-    const params = new URLSearchParams()
-    params.append('username', username.value)
-    params.append('email', email.value)
-
-    const response = await api.post('/users/reset-pw', params, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+    const response = await api.post('/users/reset-pw', {
+      loginId: username.value,
+      email: email.value
     })
+
+    console.log('=== 응답 데이터 전체 ===')
+    console.log(response.data)
+    console.log('========================')
 
     const html = typeof response.data === 'string' ? response.data : ''
 
-    if (html.includes('임시 비밀번호가 이메일로 발송되었습니다')) {
+    // HTML 응답에서 성공 여부 판단 (200 OK면 일단 성공으로 처리)
+    if (response.status === 200) {
       successMessage.value = '임시 비밀번호가 이메일로 발송되었습니다.'
       return
     }

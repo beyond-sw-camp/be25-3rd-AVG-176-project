@@ -11,9 +11,15 @@ const nickname = ref('')
 const email = ref('')
 const phoneNumber = ref('')
 
+const currentPassword = ref('')
+const newPassword = ref('')
+const confirmPassword = ref('')
+
 const originalData = ref({})
 const error = ref('')
 const successMessage = ref('')
+const passwordError = ref('')
+const passwordSuccess = ref('')
 
 onMounted(async () => {
   try {
@@ -86,19 +92,15 @@ const handleSave = async () => {
   }
 
   try {
-    const params = new URLSearchParams()
-    params.append('name', name.value)
-    params.append('nickname', nickname.value)
-    params.append('email', email.value)
-    params.append('phoneNumber', phoneNumber.value)
+    const userUpdateData = {
+      nickname: nickname.value,
+      email: email.value,
+      phoneNumber: phoneNumber.value,
+    }
 
-    await api.put('/users/me', params, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
-    })
+    await api.put('/api/users/me', userUpdateData)
 
-    successMessage.value = '정보가 수정됐어.'
+    successMessage.value = '정보가 수정되었습니다.'
     originalData.value = {
       name: name.value,
       nickname: nickname.value,
@@ -114,21 +116,84 @@ const handleSave = async () => {
   }
 }
 
+const handleChangePassword = async () => {
+  passwordError.value = ''
+  passwordSuccess.value = ''
+
+  if (!validatePasswordChange()) {
+    passwordError.value = error.value
+    error.value = ''
+    return
+  }
+
+  try {
+    const passwordData = {
+      currentPassword: currentPassword.value,
+      newPassword: newPassword.value,
+      confirmPassword: confirmPassword.value,
+    }
+
+    await api.put('/api/users/me/change-password', passwordData)
+    clearPasswordFields()
+    passwordSuccess.value = '비밀번호가 변경되었습니다.'
+  } catch (err) {
+    if (err.response) {
+      passwordError.value = err.response.data?.message || `비밀번호 변경 실패 / status: ${err.response.status}`
+    } else {
+      passwordError.value = '서버 연결 실패'
+    }
+  }
+}
+
 const hasChanges = () => {
   return (
-    name.value !== originalData.value.name ||
     nickname.value !== originalData.value.nickname ||
     email.value !== originalData.value.email ||
     phoneNumber.value !== originalData.value.phoneNumber
   )
 }
+
+const hasPasswordChanges = () => {
+  return currentPassword.value !== '' || newPassword.value !== '' || confirmPassword.value !== ''
+}
+
+const validatePasswordChange = () => {
+  if (!currentPassword.value) {
+    error.value = '현재 비밀번호를 입력해주세요.'
+    return false
+  }
+  if (!newPassword.value) {
+    error.value = '새 비밀번호를 입력해주세요.'
+    return false
+  }
+  if (!confirmPassword.value) {
+    error.value = '새 비밀번호 확인을 입력해주세요.'
+    return false
+  }
+  if (newPassword.value !== confirmPassword.value) {
+    error.value = '새 비밀번호와 새 비밀번호 확인이 일치하지 않습니다.'
+    return false
+  }
+  const passwordRegex = /^(?=.*[A-Za-z])(?=.*\d)(?=.*[@$!%*#?&])[A-Za-z\d@$!%*#?&]{8,}$/
+  if (!passwordRegex.test(newPassword.value)) {
+    error.value = '비밀번호는 영문/숫자/특수문자 조합 8자 이상이어야 합니다.'
+    return false
+  }
+  return true
+}
+
+const clearPasswordFields = () => {
+  currentPassword.value = ''
+  newPassword.value = ''
+  confirmPassword.value = ''
+}
 </script>
 
 <template>
-  <div class="flex h-screen w-screen overflow-hidden bg-white">
-    <div class="grid h-full w-full grid-cols-1 md:grid-cols-[9fr_11fr]">
+  <div class="flex min-h-screen w-screen bg-white">
+    <div class="grid min-h-screen w-full grid-cols-1 md:grid-cols-[9fr_11fr]">
       <!-- 왼쪽: 주황색 배너 -->
-      <section class="relative flex flex-col justify-between overflow-hidden bg-[#ff7b39] px-12 py-8 md:px-20 md:py-10">
+      <section class="relative flex flex-col justify-between min-h-[100vh] overflow-hidden bg-[#ff7b39] px-12 py-8 md:px-20 md:py-10">
         <!-- 장식 요소들 -->
         <div class="pointer-events-none absolute right-20 top-10 z-[1] h-32 w-48 rotate-[-25deg] rounded-2xl border-4 border-white/20"></div>
         <div class="pointer-events-none absolute bottom-32 right-[-20px] z-[1] h-48 w-48 rotate-[20deg] rounded-2xl border-4 border-white/20"></div>
@@ -209,7 +274,7 @@ const hasChanges = () => {
       </section>
 
       <!-- 오른쪽: 정보 수정 폼 -->
-      <section class="flex flex-col justify-center overflow-y-auto bg-white px-6 py-8 md:px-12 lg:px-20">
+      <section class="flex flex-col min-h-[100vh] overflow-y-auto bg-white px-6 py-8 md:px-12 lg:px-20">
         <div class="w-full max-w-[600px] mx-auto">
           <h2 class="mb-4 text-[28px] font-bold text-[#111827] md:text-[32px]">
             정보 수정
@@ -261,15 +326,15 @@ const hasChanges = () => {
           </div>
 
           <!-- 이메일 -->
-          <div class="mb-6 flex items-center gap-3">
+          <div class="mb-8 flex items-center gap-3">
             <label class="w-[120px] flex-shrink-0 text-[17px] font-bold text-[#111827]">이메일 *</label>
             <div class="w-[calc(100%-120px)]">
               <input v-model="email" type="email" class="h-[50px] w-full rounded-md border border-[#e5e7eb] bg-white px-4 text-[14px] text-[#111827] outline-none transition-all duration-200 focus:border-[#ff7b39] md:h-[56px] md:text-[15px]" placeholder="이메일 주소" />
             </div>
           </div>
 
-          <!-- 버튼 영역 -->
-          <div class="flex items-center gap-4">
+          <!-- 프로필 정보 버튼 영역 -->
+          <div class="mb-10 flex items-center gap-4">
             <button class="h-[50px] flex-1 rounded-md bg-[#ff7b39] text-[14px] font-bold text-white transition-all duration-200 hover:bg-[#ee864b] disabled:cursor-not-allowed disabled:bg-[#9ca3af] md:h-[56px] md:text-[15px]" :disabled="!hasChanges()" @click="handleSave">
               저장하기
             </button>
@@ -277,6 +342,44 @@ const hasChanges = () => {
               취소
             </button>
           </div>
+
+          <!-- 비밀번호 변경 섹션 -->
+          <div class="mb-6 h-[2px] w-full bg-[#e5e7eb]"></div>
+          <h3 class="mb-6 text-[28px] font-bold text-[#111827] md:text-[32px]">비밀번호 변경</h3>
+
+          <div v-if="passwordError" class="mb-4 rounded-lg border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-[13px] font-medium text-[#dc2626]">
+            {{ passwordError }}
+          </div>
+
+          <div v-if="passwordSuccess" class="mb-4 rounded-lg border border-[#86efac] bg-[#f0fdf4] px-4 py-3 text-[13px] font-medium text-[#16a34a]">
+            {{ passwordSuccess }}
+          </div>
+
+          <!-- 현재 비밀번호 -->
+          <div class="mb-6 flex items-center gap-3">
+            <label class="w-[120px] flex-shrink-0 text-[17px] font-bold text-[#111827]">현재 비밀번호</label>
+            <input v-model="currentPassword" type="password" class="h-[50px] w-[calc(100%-120px)] rounded-md border border-[#e5e7eb] bg-white px-4 text-[14px] text-[#111827] outline-none transition-all duration-200 focus:border-[#ff7b39] md:h-[56px] md:text-[15px]" placeholder="현재 비밀번호" />
+          </div>
+
+          <!-- 새 비밀번호 -->
+          <div class="mb-6 flex items-center gap-3">
+            <label class="w-[120px] flex-shrink-0 text-[17px] font-bold text-[#111827]">새 비밀번호</label>
+            <div class="w-[calc(100%-120px)]">
+              <input v-model="newPassword" type="password" class="h-[50px] w-full rounded-md border border-[#e5e7eb] bg-white px-4 text-[14px] text-[#111827] outline-none transition-all duration-200 focus:border-[#ff7b39] md:h-[56px] md:text-[15px]" placeholder="새 비밀번호" />
+              <span class="mt-1 block text-[12px] text-[#9ca3af]">영문/숫자/특수문자 조합 8자 이상</span>
+            </div>
+          </div>
+
+          <!-- 새 비밀번호 확인 -->
+          <div class="mb-8 flex items-center gap-3">
+            <label class="w-[120px] flex-shrink-0 text-[17px] font-bold text-[#111827]">비밀번호 확인</label>
+            <input v-model="confirmPassword" type="password" class="h-[50px] w-[calc(100%-120px)] rounded-md border border-[#e5e7eb] bg-white px-4 text-[14px] text-[#111827] outline-none transition-all duration-200 focus:border-[#ff7b39] md:h-[56px] md:text-[15px]" placeholder="새 비밀번호 확인" />
+          </div>
+
+          <!-- 비밀번호 변경 버튼 -->
+          <button class="h-[50px] w-full rounded-md bg-[#ff7b39] text-[14px] font-bold text-white transition-all duration-200 hover:bg-[#ee864b] disabled:cursor-not-allowed disabled:bg-[#9ca3af] md:h-[56px] md:text-[15px]" :disabled="!hasPasswordChanges()" @click="handleChangePassword">
+            비밀번호 변경
+          </button>
         </div>
       </section>
     </div>

@@ -165,31 +165,31 @@ const handleLogout = async () => {
 
           <div class="mb-6 h-[1.5px] w-full bg-[#d1d5db]"></div>
 
-          <p class="mb-6 text-[16px] text-[#6b7280]">{{ name || nickname || username }}님, 무엇을 하시겠어요?</p>
+          <p class="mb-6 text-[16px] text-[#6b7280]"><span class="font-bold text-[#111827]">{{ name || nickname || username }}</span>님, 무엇을 하시겠어요?</p>
 
           <div v-if="error" class="mb-4 rounded-lg border border-[#fecaca] bg-[#fef2f2] px-4 py-3 text-[13px] font-medium text-[#dc2626]">
             {{ error }}
           </div>
 
           <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
-            <button class="flex flex-col items-center justify-center gap-3 rounded-xl border border-[#e5e7eb] bg-white px-6 py-8 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#ff7b39]" @click="goToProfileInfo">
-              <span class="text-[24px] font-bold text-[#ff7b39]">01</span>
-              <span class="text-[15px] font-bold text-[#111827]">내 정보 조회</span>
+            <button class="flex flex-col items-center justify-start gap-4 rounded-xl border border-[#e5e7eb] bg-white px-6 pt-7 pb-8 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#ff7b39]" @click="goToProfileInfo">
+              <span class="text-[28px] font-bold text-[#ff7b39]">01</span>
+              <span class="text-[17px] font-bold text-[#111827]">내 정보 조회</span>
             </button>
 
-            <button class="flex flex-col items-center justify-center gap-3 rounded-xl border border-[#e5e7eb] bg-white px-6 py-8 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#ff7b39]" @click="goToProfileEdit">
-              <span class="text-[24px] font-bold text-[#ff7b39]">02</span>
-              <span class="text-[15px] font-bold text-[#111827]">정보 수정</span>
+            <button class="flex flex-col items-center justify-start gap-4 rounded-xl border border-[#e5e7eb] bg-white px-6 pt-7 pb-8 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#ff7b39]" @click="goToProfileEdit">
+              <span class="text-[28px] font-bold text-[#ff7b39]">02</span>
+              <span class="text-[17px] font-bold text-[#111827]">정보 수정</span>
             </button>
 
-            <button class="flex flex-col items-center justify-center gap-3 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-6 py-8 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#ff7b39]" @click="handleLogout">
-              <span class="text-[24px] font-bold text-[#ff7b39]">03</span>
-              <span class="text-[15px] font-bold text-[#111827]">로그아웃</span>
+            <button class="flex flex-col items-center justify-start gap-4 rounded-xl border border-[#e5e7eb] bg-[#f9fafb] px-6 pt-7 pb-8 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#ff7b39]" @click="handleLogout">
+              <span class="text-[28px] font-bold text-[#ff7b39]">03</span>
+              <span class="text-[17px] font-bold text-[#111827]">로그아웃</span>
             </button>
 
-            <button class="flex flex-col items-center justify-center gap-3 rounded-xl border border-[#fecaca] bg-[#fef2f2] px-6 py-8 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#dc2626]" @click="goToProfileDelete">
-              <span class="text-[24px] font-bold text-[#dc2626]">04</span>
-              <span class="text-[15px] font-bold text-[#b91c1c]">회원 탈퇴</span>
+            <button class="flex flex-col items-center justify-start gap-4 rounded-xl border border-[#fecaca] bg-[#fef2f2] px-6 pt-7 pb-8 transition-all duration-200 hover:-translate-y-0.5 hover:border-[#dc2626]" @click="goToProfileDelete">
+              <span class="text-[28px] font-bold text-[#dc2626]">04</span>
+              <span class="text-[17px] font-bold text-[#b91c1c]">회원 탈퇴</span>
             </button>
           </div>
 
