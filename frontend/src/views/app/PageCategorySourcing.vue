@@ -202,7 +202,7 @@ function formatNow() {
       </p>
 
       <!-- 월 선택 -->
-      <div class="mt-6 flex flex-wrap gap-2">
+      <div class="mt-6 flex flex-wrap justify-center gap-2">
         <button
           v-for="m in months" :key="m" type="button"
           class="inline-flex items-center gap-2 rounded border px-3 py-1 text-sm transition-colors"
