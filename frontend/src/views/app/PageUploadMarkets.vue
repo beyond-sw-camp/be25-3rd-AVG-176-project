@@ -381,9 +381,9 @@ watch(
           </div>
         </div>
 
-        <div class="mt-6 rounded-lg border border-neutral-200 bg-neutral-50 p-4">
+        <div class="rounded-xl border border-neutral-200 bg-white p-6 shadow-sm">
           <BaseSectionTitle>상품 소싱 등록 설정</BaseSectionTitle>
-          <label class="mt-3 flex items-start gap-3 text-sm">
+          <label class="mt-4 flex items-start gap-3 text-sm">
             <input
               v-model="form.autoPublish"
               type="checkbox"

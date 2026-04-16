@@ -1,11 +1,12 @@
 <script setup>
-import { computed, onBeforeUnmount, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 
 import BaseSectionTitle from '../../components/common/BaseSectionTitle.vue'
 import {
   mapAutoSourcingToRows,
   postSourcingAuto,
 } from '../../api/sourcingApi.js'
+import { getUploadMarketSettings } from '../../api/uploadMarketPolicy'
 
 const filters = [
   { title: '브랜드 유형', hint: '브랜드 유형을 선택하세요.' },
@@ -35,6 +36,25 @@ const error = ref('')
 const info = ref('')
 const rows = ref([])
 const lastMeta = ref({ at: '', count: 0, elapsed: null })
+const registrationMarketCode = 'COUPANG'
+const loadingMarketPolicy = ref(false)
+const marketPolicy = ref(null)
+const marketPolicyLoaded = ref(false)
+
+const hasDefaultMarginRate = computed(() => {
+  const marginRate = Number(marketPolicy.value?.targetMarginRate)
+  return Number.isFinite(marginRate) && marginRate > 0
+})
+
+const tableSaveBlockedMessage = computed(() => {
+  if (loadingMarketPolicy.value) return '등록 마켓 정책을 확인하는 중입니다.'
+  if (!marketPolicyLoaded.value || !hasDefaultMarginRate.value) {
+    return '등록 마켓의 기본 마진율 설정이 안되어 있습니다.'
+  }
+  return ''
+})
+
+const canSaveTableState = computed(() => tableSaveBlockedMessage.value === '')
 
 function startSearchTimer() {
   searchElapsed.value = 0
@@ -44,6 +64,7 @@ function stopSearchTimer() {
   if (searchTimer != null) { clearInterval(searchTimer); searchTimer = null }
 }
 onBeforeUnmount(() => { stopSearchTimer() })
+onMounted(loadRegistrationMarketPolicy)
 
 const resultSummary = computed(() => {
   const m = lastMeta.value
@@ -89,6 +110,33 @@ function stubLoadCategory() {
 }
 
 // ── 소싱 검색 ──
+async function loadRegistrationMarketPolicy() {
+  loadingMarketPolicy.value = true
+  try {
+    marketPolicy.value = await getUploadMarketSettings(registrationMarketCode)
+    marketPolicyLoaded.value = true
+  } catch (e) {
+    marketPolicy.value = null
+    marketPolicyLoaded.value = false
+    if (e?.status && e.status !== 404) {
+      error.value = e instanceof Error ? e.message : '등록 마켓 정책을 확인하지 못했습니다.'
+    }
+  } finally {
+    loadingMarketPolicy.value = false
+  }
+}
+
+function saveTableState() {
+  if (!canSaveTableState.value) {
+    error.value = tableSaveBlockedMessage.value
+    info.value = ''
+    return
+  }
+
+  error.value = ''
+  info.value = '표 상태 저장 API는 추후 연동 예정입니다.'
+}
+
 async function runSearch() {
   error.value = ''
   info.value = ''
@@ -297,7 +345,18 @@ function formatNow() {
 
       <!-- 하단 버튼 -->
       <div class="mt-4 flex flex-wrap gap-2">
-        <button type="button" class="rounded border border-neutral-300 px-3 py-1.5 text-xs">
+        <p
+          v-if="tableSaveBlockedMessage"
+          class="w-full rounded border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800"
+        >
+          {{ tableSaveBlockedMessage }}
+        </p>
+        <button
+          type="button"
+          :disabled="!canSaveTableState"
+          class="rounded border border-neutral-300 px-3 py-1.5 text-xs disabled:cursor-not-allowed disabled:bg-neutral-100 disabled:text-neutral-400"
+          @click="saveTableState"
+        >
           표 상태 저장
         </button>
         <button type="button" class="rounded border border-neutral-300 px-3 py-1.5 text-xs">
