@@ -1,60 +1,88 @@
 <script setup>
-import { ref } from 'vue'
-import BaseButton from '../../components/common/BaseButton.vue'
-import BasePagination from '../../components/common/BasePagination.vue'
-import BaseSelect from '../../components/common/BaseSelect.vue'
+import { ref, onMounted } from 'vue'
+import axios from 'axios'
+import Chart from 'chart.js/auto'
 
-const rows = [
-  {
-    year: '2025년',
-    month: '3월',
-    orders: '45',
-    sales: '₩8,620,000',
-    margin: '₩1,780,000',
-    rate: '20.1%',
-  },
-  {
-    year: '2025년',
-    month: '2월',
-    orders: '35',
-    sales: '₩7,780,000',
-    margin: '₩1,330,000',
-    rate: '1708%',
-  },
-  {
-    year: '2024년',
-    month: '4월',
-    orders: '36',
-    sales: '₩8,140,000',
-    margin: '₩1,550,000',
-    rate: '19.0%',
-  },
-  {
-    year: '2024년',
-    month: '1월',
-    orders: '41',
-    sales: '₩7,770,000',
-    margin: '₩1,300,000',
-    rate: '16.7%',
-  },
-  {
-    year: '2024년',
-    month: '10월',
-    orders: '40',
-    sales: '₩7,090,000',
-    margin: '₩1,200,000',
-    rate: '16.9%',
-  },
-]
+const USER_ID = 10
+const API = `http://localhost:8084/orders/revenue/monthly/${USER_ID}`
 
-const currentPage = ref(1)
+const rows = ref([])
+let chartInstance = null
+
+/* -----------------------------
+   데이터 가져오기 (월별 집계 API)
+----------------------------- */
+const fetchData = async () => {
+  try {
+    const res = await axios.get(API)
+
+    console.log('monthly revenue:', res.data)
+
+    rows.value = res.data.map(r => ({
+      year: `${r.year}년`,
+      month: `${r.month}월`,
+      orders: r.orderCount,
+      sales: r.sales,
+      margin: r.margin,
+      rate: r.profitRate.toFixed(1) + '%'
+    }))
+
+    renderChart()
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+/* -----------------------------
+   차트 생성
+----------------------------- */
+const renderChart = () => {
+  if (chartInstance) chartInstance.destroy()
+
+  const ctx = document.getElementById('revenueChart')
+
+  chartInstance = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: rows.value.map(r => `${r.year} ${r.month}`),
+      datasets: [
+        {
+          label: '매출',
+          data: rows.value.map(r => r.sales),
+          categoryPercentage: 0.6,
+          barPercentage: 0.5,
+          barThickness: 20
+        },
+        {
+          label: '마진',
+          data: rows.value.map(r => r.margin),
+          categoryPercentage: 0.6,
+          barPercentage: 0.5,
+          barThickness: 20
+        }
+      ]
+    },
+    options: {
+      responsive: true,
+      plugins: {
+        legend: { position: 'bottom' }
+      },
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
+    }
+  })
+}
+
+onMounted(fetchData)
 </script>
 
 <template>
   <div>
-    <div
-      class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
-    >
+    <!-- 필터 -->
+    <div class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm">
       <div class="flex flex-wrap items-center gap-2">
         <BaseSelect>
           <option>전체 🔻</option>
@@ -69,27 +97,32 @@ const currentPage = ref(1)
       </div>
     </div>
 
+    <!-- 차트 -->
     <div class="mt-6 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-      <div class="h-48 rounded-md bg-gradient-to-br from-point/5 to-sub/10" />
-      <p class="mt-2 text-center text-xs text-neutral-500">월별 매출·마진 추이 차트 영역</p>
+      <canvas id="revenueChart" height="100"></canvas>
+      <p class="mt-2 text-center text-xs text-neutral-500">
+        월별 매출·마진 추이
+      </p>
     </div>
 
+    <!-- 테이블 -->
     <div class="mt-8 overflow-x-auto rounded-lg border border-neutral-200 bg-white">
       <table class="min-w-[900px] w-full text-left text-sm">
         <thead class="border-b border-neutral-100 bg-neutral-50 text-xs text-neutral-600">
           <tr>
-            <th class="px-4 py-3 font-medium">연도</th>
-            <th class="px-4 py-3 font-medium">월</th>
-            <th class="px-4 py-3 font-medium">주문 수</th>
-            <th class="px-4 py-3 font-medium">매출</th>
-            <th class="px-4 py-3 font-medium">마진</th>
-            <th class="px-4 py-3 font-medium">수익률</th>
-            <th class="px-4 py-3 font-medium">관리</th>
+            <th class="px-4 py-3">연도</th>
+            <th class="px-4 py-3">월</th>
+            <th class="px-4 py-3">주문 수</th>
+            <th class="px-4 py-3">매출</th>
+            <th class="px-4 py-3">마진</th>
+            <th class="px-4 py-3">수익률</th>
+            <th class="px-4 py-3">관리</th>
           </tr>
         </thead>
+
         <tbody>
           <tr v-for="(r, i) in rows" :key="i" class="border-b border-neutral-100">
-            <td class="px-4 py-4 font-medium">{{ r.year }}</td>
+            <td class="px-4 py-4">{{ r.year }}</td>
             <td class="px-4 py-4">{{ r.month }}</td>
             <td class="px-4 py-4">{{ r.orders }}</td>
             <td class="px-4 py-4">{{ r.sales }}</td>
@@ -102,6 +135,7 @@ const currentPage = ref(1)
         </tbody>
       </table>
     </div>
+
     <BasePagination v-model:current-page="currentPage" :total-pages="2" />
   </div>
 </template>
