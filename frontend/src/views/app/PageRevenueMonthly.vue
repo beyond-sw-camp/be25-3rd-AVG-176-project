@@ -1,107 +1,236 @@
 <script setup>
-import { ref } from 'vue'
-import BaseButton from '../../components/common/BaseButton.vue'
-import BasePagination from '../../components/common/BasePagination.vue'
-import BaseSelect from '../../components/common/BaseSelect.vue'
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
+import Chart from 'chart.js/auto'
+import { getMonthlyRevenue } from '../../api/revenueApi'
 
-const rows = [
-  {
-    year: '2025년',
-    month: '3월',
-    orders: '45',
-    sales: '₩8,620,000',
-    margin: '₩1,780,000',
-    rate: '20.1%',
-  },
-  {
-    year: '2025년',
-    month: '2월',
-    orders: '35',
-    sales: '₩7,780,000',
-    margin: '₩1,330,000',
-    rate: '1708%',
-  },
-  {
-    year: '2024년',
-    month: '4월',
-    orders: '36',
-    sales: '₩8,140,000',
-    margin: '₩1,550,000',
-    rate: '19.0%',
-  },
-  {
-    year: '2024년',
-    month: '1월',
-    orders: '41',
-    sales: '₩7,770,000',
-    margin: '₩1,300,000',
-    rate: '16.7%',
-  },
-  {
-    year: '2024년',
-    month: '10월',
-    orders: '40',
-    sales: '₩7,090,000',
-    margin: '₩1,200,000',
-    rate: '16.9%',
-  },
-]
+const loginUserId = import.meta.env.VITE_DEV_X_USER_ID || 1
 
-const currentPage = ref(1)
+const rows = ref([])
+const loading = ref(false)
+const errorMessage = ref('')
+const chartCanvas = ref(null)
+let chartInstance = null
+
+const totalOrderCount = computed(() => rows.value.reduce((sum, row) => sum + (row.orderCount ?? 0), 0))
+const totalSales = computed(() => rows.value.reduce((sum, row) => sum + (row.sales ?? 0), 0))
+const totalMargin = computed(() => rows.value.reduce((sum, row) => sum + (row.margin ?? 0), 0))
+const averageProfitRate = computed(() => {
+  if (totalSales.value === 0) return 0
+  return (totalMargin.value / totalSales.value) * 100
+})
+
+function normalizeRows(data) {
+  if (!Array.isArray(data)) return []
+
+  return data.map((row) => ({
+    year: Number(row.year) || 0,
+    month: Number(row.month) || 0,
+    orderCount: Number(row.orderCount) || 0,
+    sales: Number(row.sales) || 0,
+    margin: Number(row.margin) || 0,
+    profitRate: Number(row.profitRate) || 0,
+  }))
+}
+
+async function fetchData() {
+  loading.value = true
+  errorMessage.value = ''
+
+  try {
+    rows.value = normalizeRows(await getMonthlyRevenue(loginUserId))
+    await nextTick()
+    renderChart()
+  } catch (error) {
+    if (error?.status === 401) {
+      errorMessage.value = '로그인 사용자 정보를 확인할 수 없습니다.'
+    } else {
+      errorMessage.value = error instanceof Error ? error.message : '월별 수익 정보를 불러오지 못했습니다.'
+    }
+    rows.value = []
+    renderChart()
+  } finally {
+    loading.value = false
+  }
+}
+
+function renderChart() {
+  if (chartInstance) {
+    chartInstance.destroy()
+    chartInstance = null
+  }
+
+  if (!chartCanvas.value) return
+
+  chartInstance = new Chart(chartCanvas.value, {
+    type: 'bar',
+    data: {
+      labels: rows.value.map((row) => `${row.year}.${String(row.month).padStart(2, '0')}`),
+      datasets: [
+        {
+          label: '매출',
+          data: rows.value.map((row) => row.sales),
+          backgroundColor: '#2563eb',
+          borderRadius: 6,
+          barThickness: 22,
+        },
+        {
+          label: '마진',
+          data: rows.value.map((row) => row.margin),
+          backgroundColor: '#16a34a',
+          borderRadius: 6,
+          barThickness: 22,
+        },
+      ],
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: 'bottom',
+        },
+        tooltip: {
+          callbacks: {
+            label(context) {
+              return `${context.dataset.label}: ${formatKrw(context.parsed.y)}`
+            },
+          },
+        },
+      },
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            callback(value) {
+              return formatCompactKrw(value)
+            },
+          },
+        },
+      },
+    },
+  })
+}
+
+function formatKrw(value) {
+  return `₩${Number(value ?? 0).toLocaleString('ko-KR')}`
+}
+
+function formatCompactKrw(value) {
+  const number = Number(value ?? 0)
+  if (Math.abs(number) >= 10000) return `${Math.round(number / 10000).toLocaleString('ko-KR')}만`
+  return number.toLocaleString('ko-KR')
+}
+
+function formatRate(value) {
+  return `${Number(value ?? 0).toFixed(1)}%`
+}
+
+function formatMonth(row) {
+  return `${row.year}년 ${row.month}월`
+}
+
+onMounted(fetchData)
+
+onBeforeUnmount(() => {
+  if (chartInstance) {
+    chartInstance.destroy()
+    chartInstance = null
+  }
+})
 </script>
 
 <template>
   <div>
-    <div
-      class="mt-6 flex flex-wrap items-center justify-between gap-4 rounded-lg border border-neutral-200 bg-white p-4 shadow-sm"
+    <p
+      v-if="errorMessage"
+      class="mb-5 rounded border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-700"
     >
-      <div class="flex flex-wrap items-center gap-2">
-        <BaseSelect>
-          <option>전체 🔻</option>
-        </BaseSelect>
-        <span class="text-sm text-neutral-600">전체 기간</span>
-        <span class="text-sm text-neutral-600">최근 6개월</span>
-        <span class="text-sm text-neutral-600">최근 12개월</span>
+      {{ errorMessage }}
+    </p>
+
+    <div class="grid gap-4 md:grid-cols-4">
+      <div class="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-neutral-500">총 주문 수</p>
+        <p class="mt-2 text-2xl font-bold text-neutral-900">{{ totalOrderCount.toLocaleString('ko-KR') }}건</p>
       </div>
-      <div class="flex gap-2">
-        <BaseButton variant="secondary">필터 적용</BaseButton>
-        <BaseButton>검색</BaseButton>
+      <div class="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-neutral-500">총 매출</p>
+        <p class="mt-2 text-2xl font-bold text-neutral-900">{{ formatKrw(totalSales) }}</p>
+      </div>
+      <div class="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-neutral-500">총 마진</p>
+        <p class="mt-2 text-2xl font-bold text-neutral-900">{{ formatKrw(totalMargin) }}</p>
+      </div>
+      <div class="rounded-lg border border-neutral-200 bg-white p-5 shadow-sm">
+        <p class="text-sm font-medium text-neutral-500">평균 수익률</p>
+        <p class="mt-2 text-2xl font-bold text-neutral-900">{{ formatRate(averageProfitRate) }}</p>
       </div>
     </div>
 
     <div class="mt-6 rounded-lg border border-neutral-200 bg-white p-6 shadow-sm">
-      <div class="h-48 rounded-md bg-gradient-to-br from-point/5 to-sub/10" />
-      <p class="mt-2 text-center text-xs text-neutral-500">월별 매출·마진 추이 차트 영역</p>
+      <div class="mb-4 flex items-center justify-between gap-3">
+        <div>
+          <p class="text-base font-semibold text-neutral-900">월별 매출 및 마진</p>
+          <p class="mt-1 text-sm text-neutral-500">주문이 발생한 월 기준으로 집계됩니다.</p>
+        </div>
+        <button
+          type="button"
+          class="rounded-md border border-neutral-300 px-3 py-2 text-sm font-medium text-neutral-700 hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
+          :disabled="loading"
+          @click="fetchData"
+        >
+          새로고침
+        </button>
+      </div>
+
+      <div class="relative h-72">
+        <div v-if="loading" class="absolute inset-0 z-10 flex items-center justify-center bg-white/70 text-sm text-neutral-500">
+          불러오는 중
+        </div>
+        <canvas ref="chartCanvas"></canvas>
+        <div
+          v-if="!loading && rows.length === 0"
+          class="absolute inset-0 flex items-center justify-center text-sm text-neutral-400"
+        >
+          월별 수익 데이터가 없습니다.
+        </div>
+      </div>
     </div>
 
     <div class="mt-8 overflow-x-auto rounded-lg border border-neutral-200 bg-white">
-      <table class="min-w-[900px] w-full text-left text-sm">
+      <table class="w-full min-w-[900px] text-left text-sm">
         <thead class="border-b border-neutral-100 bg-neutral-50 text-xs text-neutral-600">
           <tr>
             <th class="px-4 py-3 font-medium">연도</th>
             <th class="px-4 py-3 font-medium">월</th>
-            <th class="px-4 py-3 font-medium">주문 수</th>
+            <th class="px-4 py-3 font-medium">주문 수량</th>
             <th class="px-4 py-3 font-medium">매출</th>
             <th class="px-4 py-3 font-medium">마진</th>
             <th class="px-4 py-3 font-medium">수익률</th>
-            <th class="px-4 py-3 font-medium">관리</th>
           </tr>
         </thead>
         <tbody>
-          <tr v-for="(r, i) in rows" :key="i" class="border-b border-neutral-100">
-            <td class="px-4 py-4 font-medium">{{ r.year }}</td>
-            <td class="px-4 py-4">{{ r.month }}</td>
-            <td class="px-4 py-4">{{ r.orders }}</td>
-            <td class="px-4 py-4">{{ r.sales }}</td>
-            <td class="px-4 py-4">{{ r.margin }}</td>
-            <td class="px-4 py-4 text-point">{{ r.rate }}</td>
-            <td class="px-4 py-4">
-              <BaseButton variant="ghost">상세보기</BaseButton>
-            </td>
+          <tr v-if="loading">
+            <td colspan="6" class="px-4 py-10 text-center text-neutral-400">불러오는 중</td>
+          </tr>
+          <tr v-else-if="rows.length === 0">
+            <td colspan="6" class="px-4 py-10 text-center text-neutral-400">데이터가 없습니다.</td>
+          </tr>
+          <tr
+            v-for="row in rows"
+            v-else
+            :key="`${row.year}-${row.month}`"
+            class="border-b border-neutral-100 last:border-0 hover:bg-neutral-50"
+          >
+            <td class="px-4 py-4 text-neutral-600">{{ row.year }}</td>
+            <td class="px-4 py-4 font-medium text-neutral-900">{{ formatMonth(row) }}</td>
+            <td class="px-4 py-4">{{ row.orderCount.toLocaleString('ko-KR') }}건</td>
+            <td class="px-4 py-4">{{ formatKrw(row.sales) }}</td>
+            <td class="px-4 py-4 font-semibold text-neutral-900">{{ formatKrw(row.margin) }}</td>
+            <td class="px-4 py-4 font-medium text-emerald-600">{{ formatRate(row.profitRate) }}</td>
           </tr>
         </tbody>
       </table>
     </div>
-    <BasePagination v-model:current-page="currentPage" :total-pages="2" />
   </div>
 </template>
