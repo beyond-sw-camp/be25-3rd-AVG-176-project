@@ -137,6 +137,7 @@ async function runSearch() {
 
   const body = {
     seasons: [...selectedMonths.value],
+    /** 화면에서만 쓰는 추가 금지어. 정책 `GET /policies/blocked-words`는 소싱 실행 시 자동 합침 */
     banned_words: [],
     item_count: itemCount.value,
   }

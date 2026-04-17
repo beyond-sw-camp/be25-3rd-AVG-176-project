@@ -4,7 +4,47 @@
  * Gateway만 쓸 때: VITE_SOURCING_AUTO_PATH=/api/sourcing/auto 등으로 경로만 맞추면 됨.
  */
 
+import { getBlockedWords } from './uploadBlockedWord.js'
+
 const autoPath = () => import.meta.env.VITE_SOURCING_AUTO_PATH || '/sourcing/auto'
+
+/**
+ * GET /policies/blocked-words 응답 → 소싱용 문자열 배열 (배열·페이지 형태 모두 허용).
+ * @param {unknown} data
+ * @returns {string[]}
+ */
+export function normalizeBlockedWordsResponse(data) {
+  if (data == null) return []
+  const list = Array.isArray(data)
+    ? data
+    : data.content ?? data.data ?? data.items ?? data.results ?? []
+  if (!Array.isArray(list)) return []
+  return list
+    .map((item) => {
+      if (typeof item === 'string') return item.trim()
+      return String(item?.blockedWord ?? item?.word ?? '').trim()
+    })
+    .filter(Boolean)
+}
+
+/**
+ * 정책 서버 금지어 + 호출부에서 넘긴 추가 금지어를 합쳐 중복 제거.
+ * 정책 API 실패 시에는 extra 만 사용.
+ * @param {string[]} [extra]
+ * @returns {Promise<string[]>}
+ */
+export async function resolveBannedWordsForSourcing(extra = []) {
+  const extraNorm = (Array.isArray(extra) ? extra : [])
+    .map((w) => String(w).trim())
+    .filter(Boolean)
+  try {
+    const raw = await getBlockedWords()
+    const fromPolicy = normalizeBlockedWordsResponse(raw)
+    return [...new Set([...fromPolicy, ...extraNorm])]
+  } catch {
+    return [...new Set(extraNorm)]
+  }
+}
 
 function authHeaders() {
   const headers = { 'Content-Type': 'application/json' }

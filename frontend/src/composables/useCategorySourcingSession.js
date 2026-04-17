@@ -1,6 +1,10 @@
 import { ref } from 'vue'
 
-import { mapAutoSourcingToRows, postSourcingAuto } from '../api/sourcingApi.js'
+import {
+  mapAutoSourcingToRows,
+  postSourcingAuto,
+  resolveBannedWordsForSourcing,
+} from '../api/sourcingApi.js'
 
 /** 페이지를 벗어나도 유지되는 카테고리 소싱 세션 (로딩·경과·결과) */
 export const sourcingLoading = ref(false)
@@ -52,7 +56,9 @@ export async function executeCategorySourcingSearch(body) {
   startElapsedTicker()
 
   try {
-    const { ok, status, data } = await postSourcingAuto(body)
+    const banned_words = await resolveBannedWordsForSourcing(body.banned_words ?? [])
+    const payload = { ...body, banned_words }
+    const { ok, status, data } = await postSourcingAuto(payload)
 
     if (!ok) {
       sourcingError.value =
@@ -73,8 +79,8 @@ export async function executeCategorySourcingSearch(body) {
     const mapped = mapAutoSourcingToRows(
       data?.keywords,
       data?.results,
-      body.seasons,
-      body.item_count,
+      payload.seasons,
+      payload.item_count,
     )
     sourcingRows.value = mapped
     sourcingLastMeta.value = {
