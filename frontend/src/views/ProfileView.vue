@@ -49,6 +49,15 @@ const goToHome = () => {
   router.push('/')
 }
 
+const goBackToPreviousPage = () => {
+  if (window.history.length > 1) {
+    router.back()
+    return
+  }
+
+  router.push('/app')
+}
+
 const goToProfileInfo = () => {
   router.push('/profile/info')
 }
@@ -159,6 +168,18 @@ const handleLogout = async () => {
       <!-- 오른쪽: 마이페이지 메뉴 -->
       <section class="flex flex-col justify-center overflow-y-auto bg-white px-6 py-8 md:px-12 lg:px-20">
         <div class="w-full max-w-[600px] mx-auto">
+          <button
+            type="button"
+            class="mb-6 inline-flex items-center gap-2 rounded-md border border-[#e5e7eb] bg-white px-4 py-2 text-[14px] font-bold text-[#374151] transition-all duration-200 hover:border-[#ff7b39] hover:text-[#ff7b39]"
+            @click="goBackToPreviousPage"
+          >
+            <svg class="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M19 12H5" />
+              <path d="M12 19l-7-7 7-7" />
+            </svg>
+            이전페이지로 이동
+          </button>
+
           <h2 class="mb-4 text-[28px] font-bold text-[#111827] md:text-[32px]">
             마이페이지
           </h2>
