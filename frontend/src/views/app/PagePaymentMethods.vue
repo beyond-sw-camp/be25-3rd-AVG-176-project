@@ -24,6 +24,25 @@ cvc:'',
 expiry:''
 })
 
+function resetNewCard() {
+newCard.value = {
+cardType:'',
+cardNumber:'',
+cvc:'',
+expiry:''
+}
+}
+
+function openAddCardModal() {
+resetNewCard()
+showAdd.value = true
+}
+
+function closeAddCardModal() {
+showAdd.value = false
+resetNewCard()
+}
+
 /* ---------------- 카드 목록 로드 ---------------- */
 
 async function loadCards() {
@@ -67,6 +86,10 @@ function nextPage(){
 if(currentPage.value < totalPages.value) currentPage.value++
 }
 
+function resolvePaymentPriority(card, index){
+return card.paymentPriority ?? (currentPage.value - 1) * cardsPerPage + index + 1
+}
+
 /* ---------------- 카드 포맷 ---------------- */
 
 function formatCardNumber(num){
@@ -108,11 +131,33 @@ newCard.value.expiry = value
 
 }
 
+function isExpiredCard(expiry) {
+const [monthText, yearText] = expiry.split('/')
+const month = Number(monthText)
+const year = Number(yearText)
+
+if (!Number.isInteger(month) || !Number.isInteger(year) || month < 1 || month > 12) {
+return true
+}
+
+const fullYear = 2000 + year
+const now = new Date()
+const currentYear = now.getFullYear()
+const currentMonth = now.getMonth() + 1
+
+return fullYear < currentYear || (fullYear === currentYear && month < currentMonth)
+}
+
 /* ---------------- 카드 기능 ---------------- */
 
 async function addCard(){
 
 try{
+
+if(isExpiredCard(newCard.value.expiry)){
+alert('카드 유효기간을 확인해주세요.')
+return
+}
 
 const body = {
 cardType:newCard.value.cardType,
@@ -125,7 +170,7 @@ console.log("보내는 카드번호:", body.cardNumber)
 
     await postCard(body)
 
-showAdd.value = false
+closeAddCardModal()
 
 await loadCards()
 
@@ -190,24 +235,33 @@ loadCards()
 
 <div class="top-bar">
 <h2 class="title">카드 목록</h2>
-<BaseButton @click="showAdd=true">카드 추가</BaseButton>
+<BaseButton @click="openAddCardModal">카드 추가</BaseButton>
 
 </div>
+
+<p class="card-order-notice">
+※ 카드는 등록한 순서대로 소싱 상품의 자동 결제에 사용됩니다.
+</p>
 
 
 <!-- 카드 리스트 -->
 
 <div class="card-container">
 
+<p v-if="cards.length === 0" class="empty-card-message">
+등록된 카드 정보가 없습니다.
+</p>
+
 <div
-v-for="card in paginatedCards"
+v-for="(card, index) in paginatedCards"
 :key="card.id"
 class="card"
 :class="[card.cardType,{inactive:!card.active}]"
 >
 
-<div class="card-top">
-{{card.cardType}}
+<div class="card-top ">
+<span>{{card.cardType}}</span>
+<span class="priority-badge">자동 결제 {{resolvePaymentPriority(card, index)}}순위</span>
 </div>
 
 <div class="card-number">
@@ -301,7 +355,7 @@ placeholder="MM/YY"
 
 <button @click="addCard">등록</button>
 
-<button @click="showAdd=false">닫기</button>
+<button @click="closeAddCardModal">닫기</button>
 
 </div>
 
@@ -344,22 +398,30 @@ flex-direction:column;
 /* 카드 영역 */
 
 .card-container{
-display:flex;
-gap:50px;
-flex-wrap:wrap;
+display:grid;
+grid-template-columns:repeat(3, minmax(0, 1fr));
+gap:32px;
+align-items:stretch;
 
 border:1px solid #ddd;
 border-radius:12px;
 padding:60px;
 background:#fafafa;
 
-justify-content:flex-start;
-
-width: fit-content;
+width: 100%;
+min-height: 340px;
 max-width: 100%;
 margin: 0 auto;
 box-sizing: border-box;
 
+}
+
+.empty-card-message{
+grid-column:1 / -1;
+width:100%;
+text-align:center;
+color:#666;
+font-size:16px;
 }
 
 
@@ -367,8 +429,9 @@ box-sizing: border-box;
 /* 카드 */
 
 .card{
-width:320px;
-height:200px;
+width:100%;
+min-height:200px;
+aspect-ratio:1.6 / 1;
 border-radius:15px;
 padding:20px;
 color:white;
@@ -482,6 +545,21 @@ font-family:monospace;
 .card-top{
 font-size:18px;
 font-weight:bold;
+display:flex;
+align-items:center;
+justify-content:space-between;
+gap:12px;
+position:relative;
+z-index:1;
+}
+
+.priority-badge{
+border-radius:999px;
+background:rgba(255,255,255,0.22);
+padding:5px 10px;
+font-size:12px;
+font-weight:lighter;
+white-space:nowrap;
 }
 
 .card-bottom{
@@ -550,9 +628,33 @@ justify-content:space-between;  /* 🔥 핵심 */
 align-items:center;
 }
 
+.card-order-notice{
+margin-bottom:16px;
+border:1px solid #fed7aa;
+border-radius:8px;
+background:#fff7ed;
+padding:12px 14px;
+color:#9a3412;
+font-size:14px;
+font-weight:300;
+}
+
 .title{
 font-size:20px;
 font-weight:bold;
+}
+
+@media (max-width: 1100px){
+.card-container{
+grid-template-columns:repeat(2, minmax(0, 1fr));
+}
+}
+
+@media (max-width: 520px){
+.card-container{
+grid-template-columns:1fr;
+padding:24px;
+}
 }
 
 </style>
