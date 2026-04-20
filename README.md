@@ -24,6 +24,7 @@
 3. [🖥 화면 및 기능 설계서](#3-화면-및-기능-설계서)
 4. [🧪 테스트 계획 및 결과 보고서](#4-테스트-계획-및-결과-보고서)
 5. [🔎 화면 및 기능 설계서](#5-화면 및 기능 설계서)
+6. [6. 📄 테스트 케이스](#6-테스트 케이스)
 
 ---
 
@@ -98,3 +99,13 @@
 </details>
 <br>
 ---
+## 6. 📄 테스트 케이스
+
+<details>
+   <summary>세부사항</summary>
+<div markdown="1">
+  <a href="https://docs.google.com/spreadsheets/d/1dIV9X2avDBPIIPxYHD-rsDEI2gGXk_7wAITY9AfHpv4/edit?usp=sharing"> 테스트 케이스 </a>
+</div>
+</details>
+<br>
+--
