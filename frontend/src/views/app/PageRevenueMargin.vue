@@ -43,7 +43,7 @@ const chartOptions = {
 
 function toChartData(data) {
   return {
-    labels: ['상품 원가', '플랫폼 수수료', '배송비',  '실제 마진'],
+    labels: ['상품 원가', '플랫폼 수수료', '배송비', '실제 마진'],
     datasets: [
       {
         data: [
@@ -92,7 +92,7 @@ async function loadData() {
 
 onMounted(loadData)
 
-// 계산 함수 
+// 계산 함수
 function calcExpectedOrderCount(row) {
   return (row?.reviewCount ?? 0) / 10
 }
@@ -162,17 +162,26 @@ function closeDetail() {
         <p class="text-sm font-medium text-neutral-500">예상 마진</p>
         <div class="mt-1 flex items-baseline gap-2">
           <p class="text-3xl font-bold text-neutral-900">{{ formatKrw(calcExpectedMargin()) }}</p>
-          <p class="text-sm text-neutral-400">예상 수익률 {{ formatRate(expectedData?.marginRate) }}</p>
+          <p class="text-sm text-neutral-400">
+            예상 수익률 {{ formatRate(expectedData?.marginRate) }}
+          </p>
         </div>
         <div class="relative mt-6 h-64">
-          <div v-if="loading" class="flex h-full items-center justify-center text-sm text-neutral-400">
+          <div
+            v-if="loading"
+            class="flex h-full items-center justify-center text-sm text-neutral-400"
+          >
             불러오는 중…
           </div>
           <template v-else-if="expectedData">
             <Doughnut :data="toChartData(expectedData)" :options="chartOptions" />
-            <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center pb-10">
+            <div
+              class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center pb-10"
+            >
               <p class="text-xs text-neutral-400">총 예상 마진</p>
-              <p class="text-base font-bold text-neutral-800">{{ formatKrw(expectedData?.margin) }}</p>
+              <p class="text-base font-bold text-neutral-800">
+                {{ formatKrw(expectedData?.margin) }}
+              </p>
             </div>
           </template>
           <div v-else class="flex h-full items-center justify-center text-sm text-neutral-400">
@@ -186,17 +195,26 @@ function closeDetail() {
         <p class="text-sm font-medium text-neutral-500">실제 마진</p>
         <div class="mt-1 flex items-baseline gap-2">
           <p class="text-3xl font-bold text-neutral-900">{{ formatKrw(actualData?.margin) }}</p>
-          <p class="text-sm text-neutral-400">실제 수익률 {{ formatRate(actualData?.marginRate) }}</p>
+          <p class="text-sm text-neutral-400">
+            실제 수익률 {{ formatRate(actualData?.marginRate) }}
+          </p>
         </div>
         <div class="relative mt-6 h-64">
-          <div v-if="loading" class="flex h-full items-center justify-center text-sm text-neutral-400">
+          <div
+            v-if="loading"
+            class="flex h-full items-center justify-center text-sm text-neutral-400"
+          >
             불러오는 중…
           </div>
           <template v-else-if="actualData">
             <Doughnut :data="toChartData(actualData)" :options="chartOptions" />
-            <div class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center pb-10">
+            <div
+              class="pointer-events-none absolute inset-0 flex flex-col items-center justify-center pb-10"
+            >
               <p class="text-xs text-neutral-400">총 실제 마진</p>
-              <p class="text-base font-bold text-neutral-800">{{ formatKrw(actualData?.margin) }}</p>
+              <p class="text-base font-bold text-neutral-800">
+                {{ formatKrw(actualData?.margin) }}
+              </p>
             </div>
           </template>
           <div v-else class="flex h-full items-center justify-center text-sm text-neutral-400">
@@ -208,10 +226,10 @@ function closeDetail() {
 
     <!-- ═══ 테이블 ═══ -->
     <div class="mt-8 overflow-x-auto rounded-lg border border-neutral-200 bg-white">
-      <table class="w-full min-w-[960px] text-left text-sm">
+      <table class="w-full min-w-[960px] text-center text-sm">
         <thead class="border-b border-neutral-100 bg-neutral-50 text-xs text-neutral-600">
           <tr>
-            <th class="px-4 py-3 font-medium">상품 등록 일시</th>
+            <th class="px-4 py-3 font-medium">상품명</th>
             <th class="px-4 py-3 font-medium">상품 주문 수</th>
             <th class="px-4 py-3 font-medium">예상 매출</th>
             <th class="px-4 py-3 font-medium">실제 매출</th>
@@ -233,7 +251,9 @@ function closeDetail() {
             :key="row.coupangProductId ?? i"
             class="border-b border-neutral-100 last:border-0 hover:bg-neutral-50"
           >
-            <td class="px-4 py-4 text-neutral-600">{{ row.registeredAt ?? '-' }}</td>
+            <td class="px-4 py-4 text-neutral-600">
+              {{ row.productName.split(/[,-,:]/)[0] }}
+            </td>
             <td class="px-4 py-4 font-medium">{{ row.orderCount ?? 0 }}건</td>
             <td class="px-4 py-4">{{ formatKrw(calcExpectedSales(row)) }}</td>
             <td class="px-4 py-4">{{ formatKrw(calcActualSales(row)) }}</td>
@@ -250,7 +270,7 @@ function closeDetail() {
             <td class="px-4 py-4">
               <button
                 type="button"
-                class="rounded-md border border-neutral-300 px-3 py-1 text-xs hover:bg-neutral-100"
+                class="rounded-md border whitespace-nowrap border-neutral-300 px-3 py-1 text-xs hover:bg-neutral-100"
                 @click="openDetail(row)"
               >
                 상세보기
@@ -271,7 +291,13 @@ function closeDetail() {
         <div class="w-full max-w-md rounded-xl bg-white p-6 shadow-xl">
           <div class="flex items-center justify-between">
             <p class="font-semibold text-neutral-900">판매 상품 상세</p>
-            <button type="button" class="text-neutral-400 hover:text-neutral-600" @click="closeDetail">✕</button>
+            <button
+              type="button"
+              class="text-neutral-400 hover:text-neutral-600"
+              @click="closeDetail"
+            >
+              ✕
+            </button>
           </div>
           <p class="mt-1 text-sm text-neutral-500">{{ selectedRow.productName ?? '-' }}</p>
 
@@ -294,7 +320,9 @@ function closeDetail() {
             </div>
             <div class="flex justify-between border-b border-neutral-100 pb-2">
               <span class="text-neutral-500">소싱 리뷰 수</span>
-              <span class="font-medium">{{ (selectedRow.reviewCount ?? 0).toLocaleString('ko-KR') }}개</span>
+              <span class="font-medium">
+                {{ Math.floor(selectedRow.reviewCount / 10 ?? 0).toLocaleString('ko-KR') }}개
+              </span>
             </div>
             <div class="flex justify-between border-b border-neutral-100 pb-2">
               <span class="text-neutral-500">실제 주문 수</span>
@@ -310,16 +338,21 @@ function closeDetail() {
             </div>
             <div class="flex justify-between border-b border-neutral-100 pb-2">
               <span class="text-neutral-500">실제 수익</span>
-              <span class="font-semibold text-emerald-600">{{ formatKrw(calcActualProfit(selectedRow)) }}</span>
+              <span class="font-semibold text-emerald-600">{{
+                formatKrw(calcActualProfit(selectedRow))
+              }}</span>
             </div>
             <div class="flex justify-between">
               <span class="text-neutral-500">수익률 차이</span>
               <span
                 class="font-semibold"
-                :class="Number(calcProfitRateDiff(selectedRow)) >= 0 ? 'text-emerald-600' : 'text-red-500'"
+                :class="
+                  Number(calcProfitRateDiff(selectedRow)) >= 0 ? 'text-emerald-600' : 'text-red-500'
+                "
               >
                 <template v-if="calcProfitRateDiff(selectedRow) !== '-'">
-                  {{ Number(calcProfitRateDiff(selectedRow)) >= 0 ? '+' : '' }}{{ calcProfitRateDiff(selectedRow) }}%
+                  {{ Number(calcProfitRateDiff(selectedRow)) >= 0 ? '+' : ''
+                  }}{{ calcProfitRateDiff(selectedRow) }}%
                 </template>
                 <template v-else>-</template>
               </span>
