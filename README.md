@@ -98,7 +98,9 @@
 </div>
 </details>
 <br>
+
 ---
+
 ## 6. 📄 테스트 케이스
 
 <details>
@@ -108,4 +110,3 @@
 </div>
 </details>
 <br>
---
