@@ -1,7 +1,7 @@
 /**
  * Sourcing 자동 소싱: Spring POST /sourcing/auto → Python 파이프라인
  * 개발: vite proxy `/sourcing` → API_PROXY_TARGET (기본 8080)
- * Gateway만 쓸 때: VITE_SOURCING_AUTO_PATH=/api/sourcing/auto 등으로 경로만 맞추면 됨.
+ * 모놀리식 전환 시: VITE_SOURCING_AUTO_PATH=/api/sourcing/auto 등으로 경로만 맞추면 됨.
  */
 
 import { getBlockedWords } from './uploadBlockedWord.js'

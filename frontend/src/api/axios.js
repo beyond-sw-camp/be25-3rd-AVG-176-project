@@ -1,7 +1,7 @@
 import axios from 'axios'
 
-const DEFAULT_API_BASE_URL = 'http://100.119.201.17:9000'
-const DEFAULT_DEV_API_BASE_URL = '/gateway'
+const DEFAULT_API_BASE_URL = 'http://localhost:8081'
+const DEFAULT_DEV_API_BASE_URL = '/api'
 
 const defaultApiBaseUrl = import.meta.env.DEV ? DEFAULT_DEV_API_BASE_URL : DEFAULT_API_BASE_URL
 const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || defaultApiBaseUrl).replace(/\/$/, '')

@@ -1,6 +1,6 @@
 import api from './axios'
 
-/** Gateway가 `/cards`를 ORDER-PROCESSING-SERVICE 등으로 라우팅한다고 가정 */
+/** 모놀리식 백엔드에서 `/api/cards`(dev 프록시 기준)로 매핑된다고 가정 */
 export const getCards = () => api.get('/cards')
 
 export const getCard = (id) => api.get(`/cards/${id}`)

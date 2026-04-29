@@ -9,7 +9,7 @@ import {
   toggleCard as toggleCardRequest,
 } from '../../api/cardApi.js'
 
-/* 카드 정보 — 요청은 공통 api(/gateway) → Vite 프록시 → API Gateway → 유레카 인스턴스 */
+/* 카드 정보 — 요청은 공통 api(/api) → Vite 프록시 → 모놀리식 백엔드 */
 
 const cards = ref([])
 

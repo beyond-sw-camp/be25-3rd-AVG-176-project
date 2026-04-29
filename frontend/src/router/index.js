@@ -140,10 +140,21 @@ router.beforeEach(async (to) => {
   const requiresAuth = to.matched.some((record) => record.meta.requiresAuth)
   const guestOnly = to.matched.some((record) => record.meta.guestOnly)
 
+  // Public auth pages should be fully excluded from JWT cookie auth checks.
+  const publicAuthPaths = new Set(['/login', '/signup', '/find-id', '/find-password'])
+  if (publicAuthPaths.has(to.path)) {
+    return true
+  }
+
+  // Public/guest pages should not trigger auth check API calls.
+  if (!requiresAuth && guestOnly) {
+    return true
+  }
+
   let isLoggedIn = false
 
   try {
-    await api.get('/api/users/me')
+    await api.get('/users/me')
     isLoggedIn = true
   } catch {
     isLoggedIn = false

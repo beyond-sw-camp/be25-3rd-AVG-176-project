@@ -1,8 +1,8 @@
 import api from './axios'
 
 /**
- * 주문·배송 API — 개발 시 baseURL `/gateway`(axios.js) → Vite 프록시 → API Gateway
- * 경로는 게이트웨이 라우트에 맞게 조정 (필요 시 .env의 VITE_API_BASE_URL 사용)
+ * 주문·배송 API — 개발 시 baseURL `/api`(axios.js) → Vite 프록시 → 모놀리식 백엔드
+ * 경로는 모놀리식 컨트롤러 매핑에 맞게 조정 (필요 시 .env의 VITE_API_BASE_URL 사용)
  */
 export const fetchOrders = async () => {
   const { data } = await api.get('/orders')

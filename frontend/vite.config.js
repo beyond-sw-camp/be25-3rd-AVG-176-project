@@ -4,7 +4,7 @@ import { fileURLToPath, URL } from 'node:url'
 
 export default defineConfig(({ mode }) => {
   const env = loadEnv(mode, process.cwd(), '')
-  const apiProxyTarget = env.VITE_API_PROXY_TARGET || 'http://100.119.201.17:9000'
+  const apiProxyTarget = env.VITE_API_PROXY_TARGET || 'http://localhost:8081'
 
   return {
     plugins: [vue()],
@@ -20,14 +20,13 @@ export default defineConfig(({ mode }) => {
           target: apiProxyTarget,
           changeOrigin: true,
         },
-        '/sourcing': {
+        '/users': {
           target: apiProxyTarget,
           changeOrigin: true,
         },
-        '/gateway': {
+        '/sourcing': {
           target: apiProxyTarget,
           changeOrigin: true,
-          rewrite: (path) => path.replace(/^\/gateway/, ''),
         },
       },
     },

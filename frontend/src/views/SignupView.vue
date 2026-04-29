@@ -77,19 +77,14 @@ const handleSignup = async () => {
   }
 
   try {
-    const params = new URLSearchParams()
-    params.append('username', username.value)
-    params.append('password', password.value)
-    params.append('confirmPassword', confirmPassword.value)
-    params.append('name', name.value)
-    params.append('email', email.value)
-    params.append('nickname', nickname.value)
-    params.append('phoneNumber', phoneNumber.value)
-
-    await api.post('/users/signup', params, {
-      headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-      },
+    await api.post('/users/signup', {
+      username: username.value,
+      password: password.value,
+      confirmPassword: confirmPassword.value,
+      name: name.value,
+      email: email.value,
+      nickname: nickname.value,
+      phoneNumber: phoneNumber.value,
     })
 
     successMessage.value = '회원가입이 완료되었습니다. 로그인 페이지로 이동합니다.'

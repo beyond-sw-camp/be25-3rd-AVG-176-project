@@ -1,6 +1,7 @@
 <script setup>
 import { ref } from 'vue'
 import { useRouter } from 'vue-router'
+import axios from 'axios'
 import api from '../api/axios'
 
 const router = useRouter()
@@ -15,6 +16,12 @@ const generalError = ref('')
 const successMessage = ref('')
 
 const oauthBaseUrl = (api.defaults.baseURL || '').replace(/\/$/, '')
+const loginUrl = (() => {
+  const raw = (import.meta.env.VITE_AUTH_BASE_URL || '').trim().replace(/\/$/, '')
+  if (!raw) return '/users/login'
+  if (raw.endsWith('/users/login')) return raw
+  return `${raw}/users/login`
+})()
 
 const handleLogin = async () => {
   usernameError.value = ''
@@ -37,7 +44,8 @@ const handleLogin = async () => {
     params.append('username', username.value)
     params.append('password', password.value)
 
-    const response = await api.post('/users/login', params, {
+    const response = await axios.post(loginUrl, params, {
+      withCredentials: true,
       headers: {
         'Content-Type': 'application/x-www-form-urlencoded',
       },

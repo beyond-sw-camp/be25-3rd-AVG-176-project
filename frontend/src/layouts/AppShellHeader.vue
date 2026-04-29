@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import api from '../api/axios'
@@ -24,15 +24,15 @@ const currentPageTitle = computed(() => {
 
 const displayName = computed(() => {
   const data = user.value
-  return data?.nickname || data?.name || data?.loginId || '사용자'
+  return data?.nickname || data?.name || data?.loginId || 'User'
 })
 
 onMounted(async () => {
   try {
-    const response = await api.get('/api/users/me')
+    const response = await api.get('/users/me')
     user.value = response.data
   } catch (error) {
-    console.error('헤더 사용자 정보 조회 실패:', error)
+    console.error('Failed to fetch current user info:', error)
   }
 })
 

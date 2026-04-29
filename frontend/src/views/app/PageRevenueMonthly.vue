@@ -1,4 +1,4 @@
-<script setup>
+﻿<script setup>
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import Chart from 'chart.js/auto'
 import api from '../../api/axios'
@@ -37,7 +37,7 @@ async function resolveMonthlyRevenueUserId() {
     return String(devUserId).trim()
   }
 
-  const response = await api.get('/api/users/me')
+  const response = await api.get('/users/me')
   return response.data?.id
 }
 
@@ -181,7 +181,7 @@ onBeforeUnmount(() => {
       <div class="mb-4 flex items-center justify-between gap-3">
         <div>
           <p class="text-base font-semibold text-neutral-900">월별 매출 및 마진</p>
-          <p class="mt-1 text-sm text-neutral-500">주문이 발생한 월 기준으로 집계됩니다.</p>
+          <p class="mt-1 text-sm text-neutral-500">주문 발생 월 기준으로 집계합니다.</p>
         </div>
         <button
           type="button"
