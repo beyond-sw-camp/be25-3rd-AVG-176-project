@@ -15,7 +15,7 @@ onMounted(async () => {
   error.value = ''
 
   try {
-    const response = await api.get('/api/users/me')
+    const response = await api.get('/users/me')
     console.log('ProfileView 내 정보 조회 응답:', response.data)
 
     // 백엔드 확정 스펙에 맞게 필드 매핑

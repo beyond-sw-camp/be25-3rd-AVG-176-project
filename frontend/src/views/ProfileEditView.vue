@@ -23,7 +23,7 @@ const passwordSuccess = ref('')
 
 onMounted(async () => {
   try {
-    const response = await api.get('/api/users/me')
+    const response = await api.get('/users/me')
     console.log('ProfileEditView 내 정보 조회 응답:', response.data)
 
     // 백엔드 확정 스펙에 맞게 필드 매핑
@@ -98,7 +98,7 @@ const handleSave = async () => {
       phoneNumber: phoneNumber.value,
     }
 
-    await api.put('/api/users/me', userUpdateData)
+    await api.put('/users/me', userUpdateData)
 
     successMessage.value = '정보가 수정되었습니다.'
     originalData.value = {
@@ -133,7 +133,7 @@ const handleChangePassword = async () => {
       confirmPassword: confirmPassword.value,
     }
 
-    await api.put('/api/users/me/change-password', passwordData)
+    await api.put('/users/me/change-password', passwordData)
     clearPasswordFields()
     passwordSuccess.value = '비밀번호가 변경되었습니다.'
   } catch (err) {
