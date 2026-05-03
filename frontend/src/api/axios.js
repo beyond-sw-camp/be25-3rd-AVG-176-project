@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const DEFAULT_API_BASE_URL = 'http://localhost:8081'
+const DEFAULT_API_BASE_URL = 'http://localhost:8080'
 const DEFAULT_DEV_API_BASE_URL = '/api'
 
 const defaultApiBaseUrl = import.meta.env.DEV ? DEFAULT_DEV_API_BASE_URL : DEFAULT_API_BASE_URL
