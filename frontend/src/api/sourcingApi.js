@@ -46,17 +46,11 @@ export async function resolveBannedWordsForSourcing(extra = []) {
   }
 }
 
-function authHeaders() {
-  const headers = { 'Content-Type': 'application/json' }
-  const userId = import.meta.env.VITE_DEV_X_USER_ID
-  if (userId != null && String(userId).trim() !== '') {
-    headers['X-User-Id'] = String(userId).trim()
+function jsonHeaders() {
+  return {
+    Accept: 'application/json',
+    'Content-Type': 'application/json',
   }
-  const bearer = import.meta.env.VITE_DEV_AUTHORIZATION
-  if (bearer != null && String(bearer).trim() !== '') {
-    headers.Authorization = String(bearer).trim()
-  }
-  return headers
 }
 
 /**
@@ -66,7 +60,8 @@ function authHeaders() {
 export async function postSourcingAuto(body) {
   const res = await fetch(autoPath(), {
     method: 'POST',
-    headers: authHeaders(),
+    headers: jsonHeaders(),
+    credentials: 'include',
     body: JSON.stringify(body),
   })
 
@@ -109,7 +104,8 @@ export async function postSourcingUpload(rawProduct) {
   const dto = rawToSourcingDTO(rawProduct)
   const res = await fetch(uploadPath(), {
     method: 'POST',
-    headers: authHeaders(),
+    headers: jsonHeaders(),
+    credentials: 'include',
     body: JSON.stringify(dto),
   })
   const text = await res.text()

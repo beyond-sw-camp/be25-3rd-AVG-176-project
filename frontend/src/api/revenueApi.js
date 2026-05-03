@@ -25,14 +25,9 @@ export async function getRevenueProducts() {
   }
 }
 
-export async function getMonthlyRevenue(userId) {
+export async function getMonthlyRevenue() {
   try {
-    const headers = {}
-    if (userId != null && String(userId).trim() !== '') {
-      headers['X-User-Id'] = String(userId).trim()
-    }
-
-    const response = await api.get('/orders/revenue/monthly', { headers })
+    const response = await api.get('/orders/revenue/monthly')
     return response.data
   } catch (error) {
     throw toApiError(error, '월별 수익 정보를 불러오지 못했습니다.')
